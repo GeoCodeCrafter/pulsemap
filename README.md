@@ -1,117 +1,170 @@
-# unsettled
+# pulsemap
 
-Renders weather as particle streamlines over exact coastlines, straight out to
-4K video.
+Turn geospatial data into animated maps. Point it at a GeoJSON, say which
+fields drive width, colour and the pulse, get a 4K loop.
 
-![Wind streamlines flowing across Europe, coloured by air temperature, over precise Natural Earth coastlines](docs/preview.gif)
+![Britain and Ireland drawn entirely from their rivers, with pulses of light travelling downstream to the sea](docs/rivers-britain.gif)
 
-Every streak is a particle carried by the wind at that point, coloured by the
-air temperature where it is. The trails aren't stored anywhere — the canvas is
-faded a few percent each frame and drawn onto additively, so old strokes decay
-on their own and crossing trails brighten instead of going muddy.
+There is no coastline in that image and no landmass. Every line is a river
+segment. The islands appear because drainage fills the land and stops at the
+sea, so the outline is a consequence of the data rather than something drawn
+underneath it.
 
-> The wind field in the preview above is **procedural**, not a real forecast.
-> `fieldAt()` in `render/flow.js` is a stand-in so the renderer could be built
-> and tuned without burning API quota. Point it at real data and nothing else
-> changes.
+## The idea
 
-## Why the geography is separate from the weather
+A map like this is three mappings from data to ink:
 
-The first version drew the coastline from the elevation value the forecast API
-returns with each grid point. It seemed elegant — one request, no extra
-dependency — and it was useless. At 0.75° a grid cell is about 80 km, so the
-coast stair-stepped, anything smaller than a cell vanished, and a national
-border was simply not expressible: that information isn't in a weather
-response at all.
+| channel | takes | example |
+| --- | --- | --- |
+| **size** | a number | Strahler order to stroke width; magnitude to dot radius |
+| **colour** | a number or a category | depth to a ramp; catchment id to a palette |
+| **pulse** | an *ordering* | distance-to-sea; a timestamp |
 
-Coastlines and borders now come from [Natural Earth](https://www.naturalearthdata.com/)
-1:10m vector polygons, rasterised to a land mask at full canvas resolution.
-They're exact at any zoom and completely independent of however coarse the
-forecast grid happens to be.
+The third one is why this is a tool rather than two scripts. A pulse is nothing
+more than *"brighten the features whose value is near X, then sweep X"* — so
+**any field that orders your data will animate it**, with no simulation
+anywhere.
 
-Land isn't a hard clip either. Particles live everywhere and simply dim to 15%
-over water, so the flow doesn't stop dead at the shore and the coastline comes
-out of contrast rather than a cut edge.
+River segments carry their distance along the channel to the sea, so sweeping
+that sends a wave down every river on the map at once, headwaters first,
+estuaries last. Earthquakes carry a timestamp, so sweeping that replays years
+of seismicity in the order it happened. Same code. It would equally take
+elevation, depth, or the year a building went up.
 
-## Running it
+Because the phase is taken modulo one, **the loop is seamless by
+construction** — at `t = 1` every crest sits exactly where the previous one
+stood at `t = 0`. No cross-fade, no hidden seam.
+
+## Use it
 
 ```bash
 npm install
-npm run geo        # fetch and trim Natural Earth (~22 MB, once)
-npm run flow       # 16s of 4K/60 -> docs/flow.mp4
-npm run gif        # a much-reduced gif, for places that need one
+npx playwright install chromium
+
+npm run render configs/rivers-britain.json
 ```
 
-`npm run flow:still` writes a single frame, which is far quicker when you're
-tuning the look.
+That writes a full-size PNG, a GIF and a looping MP4 into `docs/`.
 
-No API key and no account. [Open-Meteo](https://open-meteo.com/) is free for
-non-commercial use and Natural Earth is public domain.
+A config is the whole interface:
+
+```jsonc
+{
+  "title": "Britain and Ireland, drawn using nothing but their rivers",
+  "data": "data/rivers-britain.geojson",
+  "kind": "lines",                     // or "points"
+  "view":  { "north": 59.4, "south": 49.8, "west": -10.9, "east": 2.05 },
+
+  "size":   { "field": "o", "base": 0.34, "exponent": 1.45 },
+  "colour": { "field": "m", "mode": "categorical", "palette": [[96,210,255], ...] },
+  "pulse":  { "field": "k", "mode": "cycle", "spacing": 76, "width": 0.115 }
+}
+```
+
+`pulse.mode` is `cycle` for a quantity with no natural end — distance along a
+river network keeps going, so several crests share the map at once — or `sweep`
+for one with real bounds, like a date range, where a single window crossing
+once is the whole story.
+
+To use your own data, write a config pointing at your GeoJSON and name the
+fields. Nothing in `render/pulsemap.js` knows what a river is.
+
+## What's here
+
+**Britain and Ireland from rivers** — 28,534 segments from HydroRIVERS. Width
+is Strahler order: a headwater with no tributaries is order 1, and the order
+rises each time two streams of equal size meet, so thousands of hairlines feed
+a handful of trunks. Colour is catchment, which makes watersheds appear as
+colour boundaries along ridges nobody drew.
+
+```bash
+npm run rivers britain && npm run render configs/rivers-britain.json
+```
+
+**Europe from rivers** — 72,674 segments, the Danube and Rhine systems dominating.
+
+![Europe drawn from its rivers, each basin in its own colour](docs/rivers-europe.png)
+
+```bash
+npm run rivers europe && npm run render configs/rivers-europe.json
+```
+
+**Every earthquake since 2019** — 58,233 events, M4.5 and up, from the USGS
+catalogue, pulsing in the order they occurred.
+
+![The world's plate boundaries drawn only from earthquake locations](docs/quakes.gif)
+
+No coastlines and no plate boundaries are drawn — the boundaries appear because
+that is where the crust moves. Colour is depth on the usual convention, shallow
+warm and deep cold, and it earns its place: subduction zones show a colour
+gradient across their width because the slab descends as it goes inland, which
+you can watch happening along Japan, Tonga and South America.
+
+The magnitude floor of 4.5 is deliberate. Below that the catalogue reflects
+where the seismometers are rather than where the earth moves — California and
+Japan blazing, the mid-Atlantic ridge barely present. At 4.5 global detection
+is essentially complete.
+
+```bash
+npm run quakes && npm run render configs/quakes.json
+```
 
 ## Things that turned out to matter
 
-**Particle count doesn't scale with area.** Ink on the canvas goes as count ×
-stroke length × stroke width, and length and width already scale with
-resolution. Scaling the count by area on top of that put roughly eight times
-too much down, and 4K came out as a blown white sheet.
+**Precompute everything that doesn't change between frames.** With tens of
+thousands of features redrawn per frame there is no budget to reproject
+coordinates or evaluate a colour ramp each time. Almost all of a naive
+version's time went on exactly that.
 
-**H.264 can't encode an odd dimension.** The aspect-ratio maths landed on a
-height of 623, x264 rejected every frame with a bare "invalid argument", and
-ffmpeg wrote a zero-byte file. The canvas height is rounded to even now.
+**Additive blending, not alpha compositing.** Overlapping features should
+accumulate light. A confluence of a hundred streams, or a subduction zone
+holding thousands of events, then reads brighter than a lone feature — which is
+real information rather than a flat wash of whatever drew last.
 
-**Interpolate land-ness, not height.** Smoothing raw elevation and cutting at
-half a metre puts the contour hard against each sea cell, because land samples
-are hundreds of metres and the crossing happens immediately — which draws the
-sample grid as a staircase. Reduce to 0/1 first and the boundary lands midway
-between samples, where a coast actually is.
+**Never render `t = 1`.** It is the same picture as `t = 0`, and including both
+makes the loop hitch for exactly one frame.
 
-**GIF is the wrong container for this.** A straight 16-second conversion at
-1000 px came out at 108 MB, against 52 MB for the whole thing as 1080p H.264.
-`npm run gif` gives up half the duration, three quarters of the frame rate and
-most of the width to get something postable.
+**H.264 with 4:2:0 chroma cannot encode an odd dimension.** The aspect-ratio
+maths landed on a height of 623 and x264 rejected every frame with a bare
+"invalid argument" while ffmpeg wrote a zero-byte file. Canvas height is
+rounded to even.
 
-## Also in here: forecast spread maps
+**Don't hash categories to hue.** Random colours per catchment read as noise
+however good the geometry is. A short hand-picked palette keeps the image
+coherent and still tells neighbours apart, which is all the colour has to do.
 
-The project started as something else — mapping how much an ensemble of
-forecasts disagrees with itself, and how that disagreement grows with lead
-time. `npm run fetch && npm run render` still does that.
+**Cosine-correct regional maps, don't correct world ones.** A degree of
+longitude at 55°N is about 0.57 of a degree of latitude — without the
+correction Britain comes out nearly twice as wide as it should be. On a
+whole-world frame there is no single latitude to correct at, so plate carrée it
+is, and the poles stretch.
 
-The interesting result: score how often a randomly chosen land cell shows more
-disagreement than a randomly chosen sea cell, where 0.5 means the field knows
-nothing about geography and 1.0 is a perfect coastline. It runs **0.48 on day
-one, 0.83 on day five, 0.95 on day seven**. Land and sea start indistinguishable
-and end up 2.5:1 apart, because the sea is thermally sluggish and the land
-isn't.
-
-It's a real effect and the numbers hold up. It just doesn't make a good
-picture — a smooth scalar field at that resolution reads as a blur no matter
-what you do to it, which is what led to the particle renderer.
-
-Two honest caveats on that half: ensemble spread is *underdispersive*, so it's
-a floor on the uncertainty rather than a measure of it — a dark region is
-somewhere the models agree, which isn't the same as somewhere they're right.
-And it's one model, ICON, chosen for 40 members and good European coverage.
-
-## How it's put together
+## Layout
 
 ```
-render/flow.js         particles, land mask, borders, the key
-render/render.js       the older scalar spread renderer
-src/spread.mjs         type 7 quantiles, p90 - p10
-scripts/trim-geo.mjs   fetch Natural Earth, cut to a Europe box
-scripts/flow-video.mjs headless capture -> 4K/60 mp4
-scripts/flow-gif.mjs   mp4 -> gif, two-pass palette
-scripts/fetch.mjs      batched, throttled, resumable forecast fetch
+render/pulsemap.js   the engine - projection, channels, pulse, annotation
+render/index.html    the page it draws into
+configs/*.json       one file per map
+scripts/render.mjs   headless capture -> png, gif, mp4
+scripts/rivers.mjs   HydroRIVERS shapefile -> regional GeoJSON
+scripts/quakes.mjs   USGS catalogue -> GeoJSON
 ```
 
 Rendering happens in a headless Chromium rather than in Node, so the same
-renderer can serve a web page later — and because getting a native canvas to
-build on Windows is an afternoon nobody gets back.
+engine can serve a web page later, and because getting a native canvas to build
+on Windows is an afternoon nobody gets back. Frames are driven one at a time
+rather than filmed, so output is exact at any frame rate — an earlier version
+recorded a live animation and produced a stuttering four frames a second.
 
-The frame capture drives the simulation one step per output frame rather than
-recording in real time, so 60fps is exact instead of sampled.
+## Data
+
+- Rivers: [HydroRIVERS v1.0](https://www.hydrosheds.org/products/hydrorivers)
+- Earthquakes: [USGS Earthquake Catalog](https://earthquake.usgs.gov/fdsnws/event/1/)
+- Coastlines, where used: [Natural Earth](https://www.naturalearthdata.com/) (public domain)
+
+`data/rivers-britain.geojson` is committed so a clone renders immediately. The
+larger datasets are gitignored and rebuilt by the scripts above.
 
 ## Licence
 
-MIT. Forecast data is Open-Meteo's, under their terms. Coastlines are Natural
-Earth, public domain.
+MIT.

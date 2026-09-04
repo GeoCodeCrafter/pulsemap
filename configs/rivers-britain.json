@@ -1,0 +1,91 @@
+{
+  "title": "Britain and Ireland, drawn using nothing but their rivers",
+  "data": "data/rivers-britain.geojson",
+  "kind": "lines",
+  "view": {
+    "north": 59.4,
+    "south": 49.8,
+    "west": -10.9,
+    "east": 2.05
+  },
+  "width": 2400,
+  "background": "#04060a",
+  "size": {
+    "field": "o",
+    "base": 0.34,
+    "exponent": 1.45,
+    "min": 0.5,
+    "bloom": 0.55
+  },
+  "colour": {
+    "field": "m",
+    "mode": "categorical",
+    "palette": [
+      [
+        96,
+        210,
+        255
+      ],
+      [
+        90,
+        255,
+        214
+      ],
+      [
+        140,
+        240,
+        130
+      ],
+      [
+        255,
+        214,
+        92
+      ],
+      [
+        255,
+        138,
+        96
+      ],
+      [
+        255,
+        106,
+        168
+      ],
+      [
+        196,
+        132,
+        255
+      ],
+      [
+        120,
+        160,
+        255
+      ],
+      [
+        80,
+        232,
+        236
+      ],
+      [
+        232,
+        240,
+        140
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "k",
+    "mode": "cycle",
+    "spacing": 76,
+    "width": 0.115,
+    "direction": "down"
+  },
+  "alpha": {
+    "base": 0.2,
+    "perUnit": 0.065,
+    "pulse": 0.34,
+    "pulsePerUnit": 0.05
+  },
+  "source": "28,534 river segments · HydroRIVERS v1.0 · width by Strahler order, colour by catchment",
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

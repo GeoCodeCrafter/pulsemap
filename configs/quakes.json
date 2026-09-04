@@ -1,0 +1,88 @@
+{
+  "title": "Every earthquake since 2019",
+  "data": "data/quakes.geojson",
+  "kind": "points",
+  "projection": "plate",
+  "view": {
+    "north": 80,
+    "south": -72,
+    "west": -180,
+    "east": 180
+  },
+  "width": 2400,
+  "background": "#04060a",
+  "size": {
+    "field": "m",
+    "base": 0.6,
+    "exponent": 1.5,
+    "offset": 4.5,
+    "min": 0.62,
+    "bloom": 2.2
+  },
+  "colour": {
+    "field": "z",
+    "mode": "ramp",
+    "stops": [
+      [
+        0,
+        [
+          255,
+          92,
+          72
+        ]
+      ],
+      [
+        35,
+        [
+          255,
+          148,
+          66
+        ]
+      ],
+      [
+        70,
+        [
+          255,
+          214,
+          104
+        ]
+      ],
+      [
+        150,
+        [
+          122,
+          240,
+          176
+        ]
+      ],
+      [
+        300,
+        [
+          96,
+          176,
+          255
+        ]
+      ],
+      [
+        700,
+        [
+          150,
+          130,
+          255
+        ]
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "t",
+    "mode": "sweep",
+    "width": 0.055,
+    "direction": "up"
+  },
+  "alpha": {
+    "base": 0.3,
+    "pulse": 0.72
+  },
+  "source": "58,233 events M4.5+ · USGS catalogue 2019-2026 · size by magnitude, colour by depth",
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

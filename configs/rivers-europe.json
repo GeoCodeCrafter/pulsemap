@@ -1,0 +1,91 @@
+{
+  "title": "Europe, drawn using nothing but its rivers",
+  "data": "data/rivers-europe.geojson",
+  "kind": "lines",
+  "view": {
+    "north": 62,
+    "south": 36,
+    "west": -10.5,
+    "east": 31.5
+  },
+  "width": 2400,
+  "background": "#04060a",
+  "size": {
+    "field": "o",
+    "base": 0.2,
+    "exponent": 1.4,
+    "min": 0.45,
+    "bloom": 0.55
+  },
+  "colour": {
+    "field": "m",
+    "mode": "categorical",
+    "palette": [
+      [
+        96,
+        210,
+        255
+      ],
+      [
+        90,
+        255,
+        214
+      ],
+      [
+        140,
+        240,
+        130
+      ],
+      [
+        255,
+        214,
+        92
+      ],
+      [
+        255,
+        138,
+        96
+      ],
+      [
+        255,
+        106,
+        168
+      ],
+      [
+        196,
+        132,
+        255
+      ],
+      [
+        120,
+        160,
+        255
+      ],
+      [
+        80,
+        232,
+        236
+      ],
+      [
+        232,
+        240,
+        140
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "k",
+    "mode": "cycle",
+    "spacing": 230,
+    "width": 0.1,
+    "direction": "down"
+  },
+  "alpha": {
+    "base": 0.17,
+    "perUnit": 0.05,
+    "pulse": 0.3,
+    "pulsePerUnit": 0.04
+  },
+  "source": "72,674 river segments · HydroRIVERS v1.0 · width by Strahler order, colour by catchment",
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

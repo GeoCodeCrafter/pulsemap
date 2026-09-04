@@ -1,25 +1,22 @@
 {
-  "name": "unsettled",
+  "name": "pulsemap",
   "version": "0.1.0",
-  "description": "Renders weather fields as particle streamlines over exact coastlines, straight out to 4K video.",
+  "description": "Turn geospatial data into animated maps. Point it at a GeoJSON, say which fields drive width, colour and the pulse, and get a 4K loop.",
   "license": "MIT",
   "author": "OpusDevs <opusdevs@proton.me>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GeoCodeCrafter/unsettled.git"
+    "url": "https://github.com/GeoCodeCrafter/pulsemap.git"
   },
   "type": "module",
   "scripts": {
-    "geo": "node scripts/trim-geo.mjs",
-    "flow": "node scripts/flow-video.mjs",
-    "flow:still": "node scripts/flow-preview.mjs",
-    "gif": "node scripts/flow-gif.mjs",
-    "fetch": "node scripts/fetch.mjs",
-    "render": "node scripts/render.mjs"
+    "render": "node scripts/render.mjs",
+    "rivers": "node scripts/rivers.mjs",
+    "quakes": "node scripts/quakes.mjs",
+    "geo": "node scripts/trim-geo.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "gifenc": "^1.0.3",
-    "pngjs": "^7.0.0"
+    "shapefile": "^0.6.6"
   }
 }
