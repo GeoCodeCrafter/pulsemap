@@ -1,0 +1,25 @@
+{
+  "name": "unsettled",
+  "version": "0.1.0",
+  "description": "Renders weather fields as particle streamlines over exact coastlines, straight out to 4K video.",
+  "license": "MIT",
+  "author": "OpusDevs <opusdevs@proton.me>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GeoCodeCrafter/unsettled.git"
+  },
+  "type": "module",
+  "scripts": {
+    "geo": "node scripts/trim-geo.mjs",
+    "flow": "node scripts/flow-video.mjs",
+    "flow:still": "node scripts/flow-preview.mjs",
+    "gif": "node scripts/flow-gif.mjs",
+    "fetch": "node scripts/fetch.mjs",
+    "render": "node scripts/render.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "gifenc": "^1.0.3",
+    "pngjs": "^7.0.0"
+  }
+}
