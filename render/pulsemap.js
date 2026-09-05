@@ -389,8 +389,36 @@ function draw(t = 0) {
     }
   }
 
+  if (GLOBE && config.globe?.atmosphere) drawAtmosphere();
+
   ctx.globalCompositeOperation = 'source-over';
   annotate();
+}
+
+/**
+ * A rim of scattered light just outside the disc.
+ *
+ * Drawn last, over the data, because that is where it is: looking at a planet
+ * you see its atmosphere in front of the limb as well as beside it. It is the
+ * single cheapest thing that makes a flat circle read as a sphere - the
+ * radial shading suggests curvature, but the halo is what says there is air.
+ */
+function drawAtmosphere() {
+  const a = config.globe.atmosphere;
+  const spread = a.spread ?? 0.09;
+  const colour = (a.colour ?? [96, 156, 226]).join(',');
+
+  const rim = ctx.createRadialGradient(CX, CY, RADIUS * (1 - spread * 0.5), CX, CY, RADIUS * (1 + spread));
+  rim.addColorStop(0, `rgba(${colour},0)`);
+  rim.addColorStop(0.5, `rgba(${colour},${(a.alpha ?? 0.3).toFixed(3)})`);
+  rim.addColorStop(1, `rgba(${colour},0)`);
+
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rim;
+  ctx.beginPath();
+  ctx.arc(CX, CY, RADIUS * (1 + spread), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
 }
 
 /**

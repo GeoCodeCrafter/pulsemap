@@ -30,3 +30,6 @@ data/world-countries.geojson
 data/power-plants.csv
 docs/powerplants.gif
 docs/quakes-globe.gif
+data/HydroRIVERS_v10_shp*
+data/rivers-world.geojson
+docs/rivers-globe.gif

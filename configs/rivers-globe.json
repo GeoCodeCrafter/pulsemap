@@ -1,0 +1,143 @@
+{
+  "data": "data/rivers-world.geojson",
+  "kind": "lines",
+  "projection": "globe",
+  "view": {
+    "north": 90,
+    "south": -90,
+    "west": -180,
+    "east": 180
+  },
+  "width": 1400,
+  "background": "#04060a",
+  "globe": {
+    "fill": 0.88,
+    "tilt": 18,
+    "spin": 1,
+    "ocean": [
+      16,
+      42,
+      78
+    ],
+    "edge": [
+      6,
+      15,
+      34
+    ],
+    "atmosphere": {
+      "colour": [
+        92,
+        158,
+        232
+      ],
+      "alpha": 0.32,
+      "spread": 0.075
+    }
+  },
+  "basemap": {
+    "data": "data/world-countries.geojson",
+    "colour": [
+      126,
+      168,
+      214
+    ],
+    "width": 0.55,
+    "alpha": 0.34,
+    "fill": {
+      "colour": [
+        22,
+        32,
+        28
+      ],
+      "alpha": 1
+    }
+  },
+  "graticule": {
+    "step": 15,
+    "colour": [
+      86,
+      124,
+      168
+    ],
+    "alpha": 0.1,
+    "width": 0.45
+  },
+  "size": {
+    "field": "o",
+    "base": 0.16,
+    "exponent": 1.25,
+    "min": 0.42,
+    "bloom": 0.5
+  },
+  "colour": {
+    "field": "m",
+    "mode": "categorical",
+    "palette": [
+      [
+        96,
+        210,
+        255
+      ],
+      [
+        90,
+        255,
+        214
+      ],
+      [
+        140,
+        240,
+        130
+      ],
+      [
+        255,
+        214,
+        92
+      ],
+      [
+        255,
+        138,
+        96
+      ],
+      [
+        255,
+        106,
+        168
+      ],
+      [
+        196,
+        132,
+        255
+      ],
+      [
+        120,
+        160,
+        255
+      ],
+      [
+        80,
+        232,
+        236
+      ],
+      [
+        232,
+        240,
+        140
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "k",
+    "mode": "cycle",
+    "spacing": 420,
+    "width": 0.03,
+    "tail": 5,
+    "direction": "down"
+  },
+  "alpha": {
+    "base": 0.16,
+    "perUnit": 0.028,
+    "pulse": 0.34,
+    "pulsePerUnit": 0.03
+  },
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

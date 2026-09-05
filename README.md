@@ -232,7 +232,26 @@ rotates once per loop:
 "globe": { "fill": 0.9, "tilt": 16, "spin": 1, "ocean": [11, 19, 34], "edge": [4, 7, 14] }
 ```
 
-![The same earthquake catalogue on a rotating globe, the Ring of Fire coming round into view](docs/readme-quakes-globe.gif)
+![Every major river on Earth on a slowly rotating globe, water pulsing seaward](docs/readme-rivers-globe.gif)
+
+**Every major river on Earth** — 223,582 segments of Strahler order 6 and up,
+water pulsing seaward, on a globe that turns once every twenty seconds.
+
+```bash
+npm run rivers world && npm run render configs/rivers-globe.json
+```
+
+The world file is a 519 MB download and takes a few minutes to walk: 8.5
+million segments at every order, of which order 6 and up is what survives at a
+globe's zoom.
+
+Coverage is worth stating because it is the reason this subject was chosen:
+latitude −54.6° to 82.9°, longitude complete, and every landmass present
+roughly in proportion to its area — Asia 156k segments, South America 109k,
+Africa 102k, North America 78k, Oceania 29k, Europe 28k, Greenland 5k. The
+network is computed from a global elevation model rather than compiled from
+national reporting, so it cannot have a country-shaped hole in it. Antarctica
+is absent because it has no rivers.
 
 Any existing config becomes a globe by changing that one line, so a dataset you
 have already drawn flat is a second, genuinely different picture for free.

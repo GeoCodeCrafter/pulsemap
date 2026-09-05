@@ -46,6 +46,18 @@ const REGIONS = {
     box: { west: -10.5, east: 31.5, south: 36.0, north: 62.0 },
     minOrder: 3,
   },
+  /**
+   * The whole planet, from the global shapefile rather than the Europe extract.
+   *
+   * Order 5 and up. Every order worldwide is 8.5 million segments, which is
+   * neither drawable per frame nor a file anyone wants; the trunks and their
+   * larger tributaries are what survives at a globe's zoom anyway.
+   */
+  world: {
+    box: { west: -180, east: 180, south: -90, north: 90 },
+    minOrder: 6,
+    source: 'data/HydroRIVERS_v10_shp/HydroRIVERS_v10.shp',
+  },
 };
 
 const region = process.argv[2] ?? 'britain';
@@ -56,7 +68,7 @@ if (!REGIONS[region]) {
 
 const { box: BOX, minOrder: MIN_ORDER } = REGIONS[region];
 
-const SOURCE = 'data/HydroRIVERS_v10_eu_shp/HydroRIVERS_v10_eu.shp';
+const SOURCE = REGIONS[region].source ?? 'data/HydroRIVERS_v10_eu_shp/HydroRIVERS_v10_eu.shp';
 const OUT = `data/rivers-${region}.geojson`;
 
 if (!existsSync(SOURCE)) {
