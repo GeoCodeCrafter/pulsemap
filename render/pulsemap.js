@@ -22,7 +22,9 @@
 
 const params = new URLSearchParams(location.search);
 const config = await (await fetch(`../${params.get('config')}`)).json();
-const collection = await (await fetch(`../${config.data}`)).json();
+const collection = config.data.endsWith('.csv')
+  ? await loadCsv(config.data)
+  : await (await fetch(`../${config.data}`)).json();
 
 const WIDTH = Number(params.get('w')) || config.width || 2400;
 const VIEW = config.view;
@@ -52,6 +54,98 @@ const canvas = document.getElementById('map');
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 const ctx = canvas.getContext('2d');
+
+/**
+ * Reads a CSV of coordinates straight into the same shape as a GeoJSON layer.
+ *
+ * Most open data is published as a CSV with latitude and longitude columns, not
+ * as GeoJSON, so without this every new dataset needs a conversion script
+ * written before anything can be drawn. Naming the two columns in the config is
+ * the whole setup.
+ *
+ * `require` drops rows with an empty value in any named column, which matters
+ * more than it sounds: a row missing its commissioning year would otherwise
+ * become year zero and sit permanently at the start of the pulse.
+ */
+async function loadCsv(path) {
+  const text = await (await fetch(`../${path}`)).text();
+  const rows = parseCsv(text);
+  const header = rows.shift() ?? [];
+  const index = Object.fromEntries(header.map((name, i) => [name.trim(), i]));
+
+  const spec = config.csv ?? {};
+  const required = spec.require ?? [];
+  const features = [];
+
+  for (const row of rows) {
+    const lon = Number(row[index[spec.lon ?? 'longitude']]);
+    const lat = Number(row[index[spec.lat ?? 'latitude']]);
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+    if (required.some((name) => !String(row[index[name]] ?? '').trim())) continue;
+
+    const properties = {};
+    for (const [name, at] of Object.entries(index)) {
+      const raw = row[at];
+      const asNumber = Number(raw);
+      properties[name] = raw !== '' && Number.isFinite(asNumber) ? asNumber : raw;
+    }
+
+    features.push({ type: 'Feature', properties, geometry: { type: 'Point', coordinates: [lon, lat] } });
+  }
+
+  return { type: 'FeatureCollection', features };
+}
+
+/**
+ * Minimal RFC 4180 parser.
+ *
+ * Splitting on commas is wrong the moment a field is quoted and contains one,
+ * and plant and place names contain them constantly - "Nuevo Leon, Mexico"
+ * would silently shift every later column by one.
+ */
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (quoted) {
+      if (char === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 1;
+        } else {
+          quoted = false;
+        }
+      } else {
+        field += char;
+      }
+      continue;
+    }
+
+    if (char === '"') quoted = true;
+    else if (char === ',') {
+      row.push(field);
+      field = '';
+    } else if (char === '\n') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+    } else if (char !== '\r') {
+      field += char;
+    }
+  }
+
+  if (field !== '' || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
 
 /**
  * An optional faint underlay, drawn behind the data and never animated.
@@ -394,6 +488,14 @@ function colourOf(properties) {
   // neighbours apart, which is all the colour has to do here.
   if (c.mode === 'categorical') {
     return c.palette[Math.abs(Math.trunc(value ?? 0)) % c.palette.length];
+  }
+
+  // An explicit name-to-colour table. Hashing a category to a palette slot is
+  // fine when the categories are arbitrary ids, but when they mean something -
+  // coal, hydro, solar - the reader expects the colours to mean something too,
+  // and a hash would put nuclear and wind next to each other at random.
+  if (c.mode === 'lookup') {
+    return c.map[value] ?? c.fallback ?? [140, 150, 170];
   }
 
   const stops = c.stops;

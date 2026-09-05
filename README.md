@@ -70,6 +70,49 @@ once is the whole story.
 To use your own data, write a config pointing at your GeoJSON and name the
 fields. Nothing in `render/pulsemap.js` knows what a river is.
 
+### CSV
+
+Most open data is published as a CSV with latitude and longitude columns rather
+than as GeoJSON, so CSVs are read directly — no conversion step:
+
+```jsonc
+"data": "data/power-plants.csv",
+"csv": {
+  "lat": "latitude",
+  "lon": "longitude",
+  "require": ["commissioning_year", "capacity_mw"]
+}
+```
+
+Every column becomes a property, numeric where it parses as a number, so any of
+them can drive size, colour or the pulse.
+
+`require` drops rows with an empty value in the named columns. That matters more
+than it sounds: a plant with no commissioning year would otherwise become year
+zero and sit permanently parked at the start of the pulse.
+
+The parser handles quoting properly rather than splitting on commas — plant and
+place names contain them constantly, and `"Nuevo Leon, Mexico"` would silently
+shift every later column by one, which looks like bad data rather than a
+parsing bug.
+
+### Colour by name
+
+When categories mean something, an explicit table beats hashing them to hues:
+
+```jsonc
+"colour": {
+  "field": "primary_fuel",
+  "mode": "lookup",
+  "map": { "Coal": [255, 92, 88], "Hydro": [74, 158, 255], "Solar": [255, 226, 96] },
+  "fallback": [150, 160, 180]
+}
+```
+
+Hashing is fine for arbitrary ids like river catchment numbers. It is wrong for
+fuels, where a reader expects coal and solar to look like coal and solar rather
+than landing next to each other at random.
+
 ## What's here
 
 **Britain and Ireland from rivers** — 28,534 segments from HydroRIVERS. Width
@@ -163,6 +206,21 @@ version of this was visible in the PNG and simply gone from the mp4.
 config naming the fields. The cyclone map needed one new config key and no
 change to the rendering at all, which is the point of the three-channel design.
 
+**Every power station on Earth, in the order they were built** — 17,447
+stations with a recorded build year, from the WRI Global Power Plant Database.
+Size is capacity, colour is fuel, and the pulse is commissioning year, so one
+loop runs from 1896 to 2020.
+
+![Power stations worldwide lighting up in the order they were commissioned](docs/readme-powerplants.gif)
+
+Read straight from the CSV as WRI publishes it. Half the database has no build
+year recorded and is dropped, so this is the history of the plants we have
+dates for rather than a complete one.
+
+```bash
+npm run powerplants && npm run render configs/powerplants.json
+```
+
 ## Two knobs worth knowing about
 
 **`pulse.tail`** makes the crest asymmetric — a sharp leading edge with a long
@@ -230,6 +288,7 @@ scripts/render.mjs   headless capture -> png, gif, mp4
 scripts/rivers.mjs   HydroRIVERS shapefile -> regional GeoJSON
 scripts/quakes.mjs   USGS catalogue -> GeoJSON
 scripts/cyclones.mjs IBTrACS best-track archive -> GeoJSON
+scripts/powerplants.mjs  downloads the WRI database, unmodified
 ```
 
 Rendering happens in a headless Chromium rather than in Node, so the same
@@ -243,6 +302,7 @@ recorded a live animation and produced a stuttering four frames a second.
 - Rivers: [HydroRIVERS v1.0](https://www.hydrosheds.org/products/hydrorivers)
 - Earthquakes: [USGS Earthquake Catalog](https://earthquake.usgs.gov/fdsnws/event/1/)
 - Cyclones: [IBTrACS v04r01](https://www.ncei.noaa.gov/products/international-best-track-archive) (NOAA NCEI)
+- Power stations: [WRI Global Power Plant Database](https://github.com/wri/global-power-plant-database)
 - Coastlines, where used: [Natural Earth](https://www.naturalearthdata.com/) (public domain)
 
 `data/rivers-britain.geojson` is committed so a clone renders immediately. The

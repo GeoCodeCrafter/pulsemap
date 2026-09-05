@@ -1,0 +1,133 @@
+{
+  "title": "Every power station on Earth, in the order they were built",
+  "data": "data/power-plants.csv",
+  "kind": "points",
+  "csv": {
+    "lat": "latitude",
+    "lon": "longitude",
+    "require": [
+      "commissioning_year",
+      "capacity_mw"
+    ]
+  },
+  "projection": "plate",
+  "view": {
+    "north": 78,
+    "south": -56,
+    "west": -180,
+    "east": 180
+  },
+  "width": 2400,
+  "background": "#04060a",
+  "basemap": {
+    "data": "data/world-countries.geojson",
+    "colour": [
+      120,
+      154,
+      200
+    ],
+    "width": 0.8,
+    "alpha": 0.55,
+    "glow": {
+      "width": 7,
+      "alpha": 0.12,
+      "passes": 3
+    }
+  },
+  "size": {
+    "field": "capacity_mw",
+    "base": 0.085,
+    "exponent": 0.42,
+    "min": 0.45,
+    "bloom": 2.2
+  },
+  "colour": {
+    "field": "primary_fuel",
+    "mode": "lookup",
+    "map": {
+      "Coal": [
+        255,
+        92,
+        88
+      ],
+      "Gas": [
+        255,
+        158,
+        74
+      ],
+      "Oil": [
+        214,
+        132,
+        96
+      ],
+      "Petcoke": [
+        214,
+        132,
+        96
+      ],
+      "Hydro": [
+        74,
+        158,
+        255
+      ],
+      "Nuclear": [
+        124,
+        244,
+        168
+      ],
+      "Solar": [
+        255,
+        226,
+        96
+      ],
+      "Wind": [
+        96,
+        232,
+        240
+      ],
+      "Biomass": [
+        176,
+        208,
+        110
+      ],
+      "Waste": [
+        168,
+        176,
+        196
+      ],
+      "Geothermal": [
+        226,
+        122,
+        226
+      ],
+      "Wave and Tidal": [
+        120,
+        200,
+        226
+      ]
+    },
+    "fallback": [
+      150,
+      160,
+      180
+    ]
+  },
+  "pulse": {
+    "field": "commissioning_year",
+    "mode": "sweep",
+    "width": 0.028,
+    "tail": 7,
+    "direction": "up"
+  },
+  "glow": {
+    "width": 4,
+    "alpha": 0.05,
+    "min": 600
+  },
+  "alpha": {
+    "base": 0.15,
+    "pulse": 0.8
+  },
+  "source": "17,447 stations with a known build year · WRI Global Power Plant Database · size by capacity, colour by fuel",
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

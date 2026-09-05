@@ -27,3 +27,5 @@ data/cyclones.geojson
 # download first.
 data/world-coastline.geojson
 data/world-countries.geojson
+data/power-plants.csv
+docs/powerplants.gif
