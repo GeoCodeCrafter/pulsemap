@@ -10,6 +10,7 @@ docs/.frames-*/
 docs/rivers-britain.gif
 docs/rivers-europe.gif
 docs/quakes.gif
+docs/cyclones.gif
 
 # Raw downloads and the larger derived datasets. Everything here is
 # reproducible from the scripts in scripts/, and together they run to a few
@@ -18,6 +19,8 @@ data/HydroRIVERS_*
 data/ne_10m_*.geojson
 data/rivers-europe.geojson
 data/quakes.geojson
+data/ibtracs.*.csv
+data/cyclones.geojson
 
 # data/rivers-britain.geojson IS committed, deliberately: it is 6.8 MB and it
 # means `npm run render` works straight after a clone, without a 250 MB

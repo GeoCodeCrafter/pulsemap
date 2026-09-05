@@ -4,6 +4,7 @@ Turn geospatial data into animated maps. Point it at a GeoJSON, say which
 fields drive width, colour and the pulse, get a 4K loop.
 
 ![Britain and Ireland drawn entirely from their rivers, with pulses of light travelling downstream to the sea](docs/readme-rivers-britain.gif)
+![Every tropical cyclone track since 1980, lighting up in seasonal order](docs/readme-cyclones.gif)
 
 There is no coastline in that image and no landmass. Every line is a river
 segment. The islands appear because drainage fills the land and stops at the
@@ -109,6 +110,34 @@ is essentially complete.
 npm run quakes && npm run render configs/quakes.json
 ```
 
+**Every tropical cyclone since 1980** — 139,518 track segments from 4,182
+storms, from the IBTrACS archive. Width and colour are both wind speed; the
+pulse is day of the year, so one loop is one calendar year.
+
+Because each segment carries its own date rather than the storm carrying one,
+the pulse travels *along* a track as the storm actually moved. The northern
+hemisphere season lights up, fades, and the southern takes over.
+
+Two things fall straight out of it. There is a **clear empty band along the
+equator** — a cyclone needs the Coriolis force to organise a rotation, and
+within about 5 degrees of the equator there isn't enough of it. And the basins
+separate on their own, with nothing drawn to divide them.
+
+```bash
+npm run cyclones && npm run render configs/cyclones.json
+```
+
+The first run downloads the 137 MB IBTrACS since-1980 archive. Two filters are
+deliberate: since 1980 rather than the full record back to 1842, because
+pre-satellite positions come from ship reports and landfall accounts, so the
+older map shows shipping lanes more than storms; and only storms that reached
+34 kt, because below that the record reflects how willing each agency was to
+log a weak disturbance.
+
+**Adding a dataset of your own** takes a prep script that writes GeoJSON and a
+config naming the fields. The cyclone map needed no engine changes at all —
+which is the point of the three-channel design.
+
 ## Things that turned out to matter
 
 **Precompute everything that doesn't change between frames.** With tens of
@@ -133,6 +162,13 @@ rounded to even.
 however good the geometry is. A short hand-picked palette keeps the image
 coherent and still tells neighbours apart, which is all the colour has to do.
 
+**Check the longitude convention before trusting a global file.** IBTrACS
+mixes them between contributing agencies — most report −180 to 180, some report
+0 to 360, and the file runs to 266 as a result. Every western Pacific storm was
+being drawn off the right-hand edge of the map. Worse, the bug hid itself: with
+nothing sitting near 180, the dateline-crossing check found nothing to skip and
+reported a clean zero.
+
 **Cosine-correct regional maps, don't correct world ones.** A degree of
 longitude at 55°N is about 0.57 of a degree of latitude — without the
 correction Britain comes out nearly twice as wide as it should be. On a
@@ -148,6 +184,7 @@ configs/*.json       one file per map
 scripts/render.mjs   headless capture -> png, gif, mp4
 scripts/rivers.mjs   HydroRIVERS shapefile -> regional GeoJSON
 scripts/quakes.mjs   USGS catalogue -> GeoJSON
+scripts/cyclones.mjs IBTrACS best-track archive -> GeoJSON
 ```
 
 Rendering happens in a headless Chromium rather than in Node, so the same
@@ -160,6 +197,7 @@ recorded a live animation and produced a stuttering four frames a second.
 
 - Rivers: [HydroRIVERS v1.0](https://www.hydrosheds.org/products/hydrorivers)
 - Earthquakes: [USGS Earthquake Catalog](https://earthquake.usgs.gov/fdsnws/event/1/)
+- Cyclones: [IBTrACS v04r01](https://www.ncei.noaa.gov/products/international-best-track-archive) (NOAA NCEI)
 - Coastlines, where used: [Natural Earth](https://www.naturalearthdata.com/) (public domain)
 
 `data/rivers-britain.geojson` is committed so a clone renders immediately. The

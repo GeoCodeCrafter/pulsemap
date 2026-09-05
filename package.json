@@ -13,6 +13,7 @@
     "render": "node scripts/render.mjs",
     "rivers": "node scripts/rivers.mjs",
     "quakes": "node scripts/quakes.mjs",
+    "cyclones": "node scripts/cyclones.mjs",
     "geo": "node scripts/trim-geo.mjs"
   },
   "devDependencies": {
