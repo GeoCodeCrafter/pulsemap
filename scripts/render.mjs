@@ -86,13 +86,20 @@ if (!stillOnly) {
 
   // Two passes for the gif: a palette built from the actual frames, then the
   // mapping. One pass with a generic palette bands every colour ramp badly.
+  //
+  // The full 256 colours, and sierra2_4a rather than bayer. These maps are
+  // mostly near-black with small bright marks on top, which is close to worst
+  // case for palette quantisation - a restricted palette spends its entries on
+  // the dark gradient and the marks themselves collapse, while ordered dither
+  // lays a visible crosshatch across the background. Error-diffusion costs some
+  // file size and keeps the small features intact.
   ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.png`,
-    '-vf', 'palettegen=max_colors=160:stats_mode=diff', `${dir}/palette.png`]);
+    '-vf', 'palettegen=max_colors=256:stats_mode=diff', `${dir}/palette.png`]);
   ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.png`, '-i', `${dir}/palette.png`,
-    '-lavfi', '[0:v][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+    '-lavfi', '[0:v][1:v]paletteuse=dither=sierra2_4a:diff_mode=rectangle',
     '-loop', '0', `docs/${name}.gif`]);
   ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.png`,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '18',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
     // H.264 with 4:2:0 chroma cannot encode an odd dimension, and x264's
     // complaint about it is a bare "invalid argument" with a zero-byte file.
     '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',

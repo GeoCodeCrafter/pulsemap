@@ -16,7 +16,7 @@
     "base": 0.6,
     "exponent": 1.5,
     "offset": 4.5,
-    "min": 0.62,
+    "min": 0.8,
     "bloom": 2.2
   },
   "colour": {
@@ -80,8 +80,8 @@
     "direction": "up"
   },
   "alpha": {
-    "base": 0.3,
-    "pulse": 0.72
+    "base": 0.38,
+    "pulse": 0.66
   },
   "source": "58,233 events M4.5+ · USGS catalogue 2019-2026 · size by magnitude, colour by depth",
   "watermark": "github.com/GeoCodeCrafter/pulsemap"
