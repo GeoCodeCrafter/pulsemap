@@ -99,12 +99,17 @@
   "basemap": {
     "data": "data/world-countries.geojson",
     "colour": [
-      132,
-      164,
-      206
+      126,
+      166,
+      214
     ],
-    "width": 0.9,
-    "alpha": 0.85
+    "width": 0.85,
+    "alpha": 0.8,
+    "glow": {
+      "width": 7,
+      "alpha": 0.13,
+      "passes": 3
+    }
   },
   "glow": {
     "width": 4,

@@ -67,6 +67,14 @@ const basemap = config.basemap
   ? await (await fetch(`../${config.basemap.data}`)).json()
   : null;
 
+/**
+ * The basemap as one Path2D, built once.
+ *
+ * It never changes between frames, so rebuilding it per frame was 240 country
+ * outlines of geometry walked several hundred times for an identical result.
+ */
+const basemapPath = basemap ? buildBasemapPath() : null;
+
 const features = prepare();
 
 window.pulsemap = {
@@ -286,29 +294,63 @@ function annotate() {
   }
 }
 
-/** Thin, dim, and drawn once under everything. Reference, not subject. */
-function drawBasemap() {
-  const b = config.basemap;
-  ctx.strokeStyle = `rgba(${b.colour.join(',')},${b.alpha ?? 0.22})`;
-  ctx.lineWidth = Math.max(0.5, (b.width ?? 0.6) * SCALE);
-  ctx.beginPath();
+/**
+ * Accepts line or polygon geometry. Polygons are stroked rather than filled,
+ * because country outlines give the coast and the borders from one file where
+ * a coastline set has no borders in it at all.
+ */
+function buildBasemapPath() {
+  const path = new Path2D();
 
   for (const feature of basemap.features) {
-    // Accepts line or polygon geometry. Polygons are stroked rather than
-    // filled, because country outlines give the coast and the borders in one
-    // file where a coastline set has no borders in it at all.
-    const parts = rings(feature.geometry);
-
-    for (const part of parts) {
+    for (const part of rings(feature.geometry)) {
       part.forEach((position, index) => {
         const [x, y] = project(position);
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (index === 0) path.moveTo(x, y);
+        else path.lineTo(x, y);
       });
     }
   }
 
-  ctx.stroke();
+  return path;
+}
+
+/**
+ * Reference, not subject - but not a bare hairline either.
+ *
+ * Stroked several times at decreasing width and increasing opacity, which
+ * builds a soft halo around a crisp core. A single thin line reads as a
+ * wireframe sitting on top of the picture; the halo makes the geography feel
+ * like it is behind the data and lit by it, and it also survives video
+ * encoding far better, because there is a gradient either side of the line
+ * rather than one isolated pixel for the codec to discard.
+ */
+function drawBasemap() {
+  const b = config.basemap;
+  const colour = b.colour.join(',');
+  const width = Math.max(0.5, (b.width ?? 0.9) * SCALE);
+  const alpha = b.alpha ?? 0.85;
+
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  const halo = b.glow;
+  if (halo) {
+    const passes = halo.passes ?? 3;
+    for (let i = passes; i >= 1; i--) {
+      const fraction = i / passes;
+      ctx.strokeStyle = `rgba(${colour},${(alpha * (halo.alpha ?? 0.1) * (1 - fraction * 0.6)).toFixed(4)})`;
+      ctx.lineWidth = width * (halo.width ?? 6) * fraction;
+      ctx.stroke(basemapPath);
+    }
+  }
+
+  ctx.strokeStyle = `rgba(${colour},${alpha})`;
+  ctx.lineWidth = width;
+  ctx.stroke(basemapPath);
+
+  ctx.globalCompositeOperation = 'source-over';
 }
 
 /** Flattens any geometry type down to a list of coordinate rings. */
