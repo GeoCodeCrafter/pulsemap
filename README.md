@@ -221,6 +221,48 @@ dates for rather than a complete one.
 npm run powerplants && npm run render configs/powerplants.json
 ```
 
+### Globe
+
+`"projection": "globe"` swaps the flat frame for an orthographic sphere, which
+rotates once per loop:
+
+```jsonc
+"projection": "globe",
+"view": { "north": 90, "south": -90, "west": -180, "east": 180 },
+"globe": { "fill": 0.9, "tilt": 16, "spin": 1, "ocean": [11, 19, 34], "edge": [4, 7, 14] }
+```
+
+![The same earthquake catalogue on a rotating globe, the Ring of Fire coming round into view](docs/readme-quakes-globe.gif)
+
+Any existing config becomes a globe by changing that one line, so a dataset you
+have already drawn flat is a second, genuinely different picture for free.
+
+Four things it needs that a flat map does not:
+
+**Nothing can be projected ahead of time.** Flat maps transform every vertex
+once at load; here the projection depends on the rotation, so all of them are
+transformed every frame. That is four trig calls per point and costs a few
+milliseconds even at 280,000 vertices.
+
+**Back-face culling.** Without a visibility test the far hemisphere draws
+through the near one and South America sits on top of Asia. Lines break at the
+horizon rather than drawing through the planet — a track running round the back
+would otherwise appear as a chord straight across the disc.
+
+**Filled countries need the limb.** A ring with nothing visible is skipped; a
+ring straddling the horizon has its off-face points pushed out onto the limb,
+which keeps it a closed shape instead of a torn one. A true spherical clip
+would be exact and, at this line weight, indistinguishable.
+
+**Curved graticules.** Straight meridians are correct only on the
+equirectangular projection, so on a sphere they are walked in three degree
+steps.
+
+The ocean disc matters more than it looks: without it the land floats in the
+same black as everything else and there is no planet, only scattered
+continents. The radial gradient is what suggests curvature — a flat fill reads
+as a sticker.
+
 ### Making the ground less bare
 
 Outlines alone leave the continents as empty as the sea. Two optional layers

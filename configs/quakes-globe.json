@@ -1,0 +1,134 @@
+{
+  "data": "data/quakes.geojson",
+  "kind": "points",
+  "projection": "globe",
+  "view": {
+    "north": 90,
+    "south": -90,
+    "west": -180,
+    "east": 180
+  },
+  "width": 2400,
+  "background": "#04060a",
+  "size": {
+    "field": "m",
+    "base": 0.75,
+    "exponent": 1.5,
+    "offset": 4.5,
+    "min": 0.7,
+    "bloom": 2.2
+  },
+  "colour": {
+    "field": "z",
+    "mode": "ramp",
+    "stops": [
+      [
+        0,
+        [
+          255,
+          92,
+          72
+        ]
+      ],
+      [
+        35,
+        [
+          255,
+          148,
+          66
+        ]
+      ],
+      [
+        70,
+        [
+          255,
+          214,
+          104
+        ]
+      ],
+      [
+        150,
+        [
+          122,
+          240,
+          176
+        ]
+      ],
+      [
+        300,
+        [
+          96,
+          176,
+          255
+        ]
+      ],
+      [
+        700,
+        [
+          150,
+          130,
+          255
+        ]
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "t",
+    "mode": "sweep",
+    "width": 0.055,
+    "direction": "up"
+  },
+  "alpha": {
+    "base": 0.38,
+    "pulse": 0.66
+  },
+  "watermark": "github.com/GeoCodeCrafter/pulsemap",
+  "globe": {
+    "fill": 0.9,
+    "tilt": 16,
+    "spin": 1,
+    "ocean": [
+      11,
+      19,
+      34
+    ],
+    "edge": [
+      4,
+      7,
+      14
+    ]
+  },
+  "basemap": {
+    "data": "data/world-countries.geojson",
+    "colour": [
+      120,
+      154,
+      200
+    ],
+    "width": 0.7,
+    "alpha": 0.5,
+    "fill": {
+      "colour": [
+        15,
+        23,
+        38
+      ],
+      "alpha": 1
+    },
+    "glow": {
+      "width": 6,
+      "alpha": 0.1,
+      "passes": 3
+    }
+  },
+  "graticule": {
+    "step": 15,
+    "colour": [
+      74,
+      100,
+      134
+    ],
+    "alpha": 0.14,
+    "width": 0.5
+  }
+}

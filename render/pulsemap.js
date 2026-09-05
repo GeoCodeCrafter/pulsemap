@@ -36,16 +36,40 @@ const VIEW = config.view;
  * out nearly twice as wide as it should be. For a whole-world frame there is no
  * single latitude to correct at, so plate carree it is, and the poles stretch.
  */
+const GLOBE = config.projection === 'globe';
+
 const SQUEEZE =
   config.projection === 'plate'
     ? 1
     : Math.cos((((VIEW.north + VIEW.south) / 2) * Math.PI) / 180);
 
-const HEIGHT =
-  2 *
-  Math.round(
-    (WIDTH * (VIEW.north - VIEW.south)) / ((VIEW.east - VIEW.west) * SQUEEZE) / 2,
-  );
+// A globe wants a square frame; anything else follows the view's own shape.
+const HEIGHT = GLOBE
+  ? WIDTH
+  : 2 *
+    Math.round(
+      (WIDTH * (VIEW.north - VIEW.south)) / ((VIEW.east - VIEW.west) * SQUEEZE) / 2,
+    );
+
+const DEG = Math.PI / 180;
+const RADIUS = (WIDTH / 2) * ((config.globe?.fill ?? 0.9));
+const CX = WIDTH / 2;
+const CY = HEIGHT / 2;
+
+/** Tilt of the viewing axis. A few degrees of north reads better than dead on. */
+const PHI0 = (config.globe?.tilt ?? 16) * DEG;
+const SIN_PHI0 = Math.sin(PHI0);
+const COS_PHI0 = Math.cos(PHI0);
+
+/**
+ * Current rotation, in radians, set once per frame.
+ *
+ * On a globe the projection depends on time, so unlike the flat maps nothing
+ * can be projected ahead of the render - every vertex is transformed per frame.
+ * That sounds expensive and is not: it is four trig calls per point, and even
+ * the cyclone set at 280,000 vertices costs a few milliseconds a frame.
+ */
+let rotation = 0;
 
 /** Everything visual is expressed against the width the look was tuned at. */
 const SCALE = WIDTH / (config.width || 2400);
@@ -167,7 +191,7 @@ const basemap = config.basemap
  * It never changes between frames, so rebuilding it per frame was 240 country
  * outlines of geometry walked several hundred times for an identical result.
  */
-const basemapPath = basemap ? buildBasemapPath() : null;
+const basemapPath = basemap && !GLOBE ? buildBasemapPath() : null;
 
 /**
  * One path per country, for filling.
@@ -178,9 +202,11 @@ const basemapPath = basemap ? buildBasemapPath() : null;
  * only the interior rings - lakes.
  */
 const basemapShapes =
-  basemap && config.basemap.fill ? basemap.features.map((f) => ringPath(f.geometry)) : null;
+  basemap && config.basemap.fill && !GLOBE
+    ? basemap.features.map((f) => ringPath(f.geometry))
+    : null;
 
-const graticulePath = config.graticule ? buildGraticule() : null;
+const graticulePath = config.graticule && !GLOBE ? buildGraticule() : null;
 
 const features = prepare();
 
@@ -235,8 +261,11 @@ function prepare() {
     }
 
     return {
-      geometry:
-        config.kind === 'points'
+      // On a globe the screen position changes every frame, so the raw
+      // coordinates are kept and transformed at draw time instead.
+      geometry: GLOBE
+        ? feature.geometry.coordinates
+        : config.kind === 'points'
           ? project(feature.geometry.coordinates)
           : feature.geometry.coordinates.map(project),
       size: sizeOf(p),
@@ -251,10 +280,15 @@ function prepare() {
  * @param {number} t Position in the loop, 0 to 1.
  */
 function draw(t = 0) {
+  // One full turn per loop by default, so the rotation is seamless for the
+  // same reason the pulse is: it returns exactly to where it started.
+  rotation = GLOBE ? t * (config.globe?.spin ?? 1) * Math.PI * 2 : 0;
+
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = config.background ?? '#04060a';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+  if (GLOBE) drawOcean();
   if (basemap) drawBasemap();
 
   // Additive, so overlapping features accumulate light instead of painting
@@ -307,7 +341,8 @@ function draw(t = 0) {
     const glowing = bloom && feature.unit >= (bloom.min ?? 0) && glow > 0.02;
 
     if (config.kind === 'points') {
-      const [x, y] = feature.geometry;
+      const [x, y, visible] = GLOBE ? project(feature.geometry) : feature.geometry;
+      if (GLOBE && !visible) continue;
       if (glowing) {
         ctx.fillStyle = `rgba(${feature.fill},${(alpha * (bloom.alpha ?? 0.15)).toFixed(3)})`;
         ctx.beginPath();
@@ -320,10 +355,27 @@ function draw(t = 0) {
       ctx.fill();
     } else {
       ctx.beginPath();
-      feature.geometry.forEach(([x, y], index) => {
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
+      if (GLOBE) {
+        // Break the line wherever it crosses the horizon rather than drawing
+        // through the planet. A track running round the far side would
+        // otherwise appear as a chord straight across the disc.
+        let pen = false;
+        for (const position of feature.geometry) {
+          const [x, y, visible] = project(position);
+          if (!visible) {
+            pen = false;
+            continue;
+          }
+          if (pen) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+          pen = true;
+        }
+      } else {
+        feature.geometry.forEach(([x, y], index) => {
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+      }
 
       if (glowing) {
         ctx.strokeStyle = `rgba(${feature.fill},${(alpha * (bloom.alpha ?? 0.15)).toFixed(3)})`;
@@ -410,6 +462,172 @@ function annotate() {
 }
 
 /**
+ * The basemap, rebuilt each frame because the projection has moved.
+ *
+ * Rings with nothing visible are skipped outright. Points that are merely off
+ * the near face within an otherwise visible ring get pushed to the limb, which
+ * keeps a country straddling the horizon as a closed shape instead of a torn
+ * one - a proper spherical clip against the horizon circle would be exact, but
+ * at this line weight nobody can tell the difference.
+ */
+function drawBasemapGlobe() {
+  const b = config.basemap;
+  const colour = b.colour.join(',');
+
+  if (config.graticule) {
+    const g = config.graticule;
+    ctx.strokeStyle = `rgba(${(g.colour ?? [90, 116, 150]).join(',')},${g.alpha ?? 0.1})`;
+    ctx.lineWidth = Math.max(0.5, (g.width ?? 0.5) * SCALE);
+    ctx.stroke(globeGraticule(g.step ?? 15));
+  }
+
+  if (b.fill) {
+    ctx.fillStyle = `rgba(${b.fill.colour.join(',')},${b.fill.alpha ?? 1})`;
+    for (const feature of basemap.features) {
+      const shape = globeShape(feature.geometry);
+      if (shape) ctx.fill(shape, 'evenodd');
+    }
+  }
+
+  const outline = globeOutline();
+  const width = Math.max(0.5, (b.width ?? 0.9) * SCALE);
+  const alpha = b.alpha ?? 0.85;
+
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  const halo = b.glow;
+  if (halo) {
+    const passes = halo.passes ?? 3;
+    for (let i = passes; i >= 1; i--) {
+      const fraction = i / passes;
+      ctx.strokeStyle = `rgba(${colour},${(alpha * (halo.alpha ?? 0.1) * (1 - fraction * 0.6)).toFixed(4)})`;
+      ctx.lineWidth = width * (halo.width ?? 6) * fraction;
+      ctx.stroke(outline);
+    }
+  }
+
+  ctx.strokeStyle = `rgba(${colour},${alpha})`;
+  ctx.lineWidth = width;
+  ctx.stroke(outline);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/** Filled land for one country, or null when it is entirely on the far side. */
+function globeShape(geometry) {
+  const path = new Path2D();
+  let drew = false;
+
+  for (const ring of rings(geometry)) {
+    const projected = ring.map(project);
+    if (!projected.some((point) => point[2])) continue;
+
+    projected.forEach((point, index) => {
+      const [x, y] = point[2] ? point : toLimb(point);
+      if (index === 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
+    });
+    path.closePath();
+    drew = true;
+  }
+
+  return drew ? path : null;
+}
+
+/** Coastlines and borders, broken wherever they pass behind the horizon. */
+function globeOutline() {
+  const path = new Path2D();
+
+  for (const feature of basemap.features) {
+    for (const ring of rings(feature.geometry)) {
+      let pen = false;
+      for (const position of ring) {
+        const [x, y, visible] = project(position);
+        if (!visible) {
+          pen = false;
+          continue;
+        }
+        if (pen) path.lineTo(x, y);
+        else path.moveTo(x, y);
+        pen = true;
+      }
+    }
+  }
+
+  return path;
+}
+
+/**
+ * Meridians and parallels as curves.
+ *
+ * On the flat projection these are straight lines between two endpoints. On a
+ * sphere they are not, so each one is walked in small steps - the comment on
+ * the flat version warning about exactly this is why it was cheap to add.
+ */
+function globeGraticule(step) {
+  const path = new Path2D();
+  const fine = 3;
+
+  const line = (points) => {
+    let pen = false;
+    for (const position of points) {
+      const [x, y, visible] = project(position);
+      if (!visible) {
+        pen = false;
+        continue;
+      }
+      if (pen) path.lineTo(x, y);
+      else path.moveTo(x, y);
+      pen = true;
+    }
+  };
+
+  for (let lon = -180; lon < 180; lon += step) {
+    const points = [];
+    for (let lat = -90; lat <= 90; lat += fine) points.push([lon, lat]);
+    line(points);
+  }
+
+  for (let lat = -90 + step; lat < 90; lat += step) {
+    const points = [];
+    for (let lon = -180; lon <= 180; lon += fine) points.push([lon, lat]);
+    line(points);
+  }
+
+  return path;
+}
+
+/**
+ * The sphere itself: a filled disc with a soft edge.
+ *
+ * Without it the land floats in the same black as the surrounding page and
+ * there is no planet, just a scattering of continents. The gradient does the
+ * work of suggesting curvature - flat fill reads as a sticker.
+ */
+function drawOcean() {
+  const g = config.globe ?? {};
+  const ocean = g.ocean ?? [10, 18, 32];
+  const edge = g.edge ?? [4, 8, 16];
+
+  const shade = ctx.createRadialGradient(
+    CX - RADIUS * 0.35,
+    CY - RADIUS * 0.35,
+    RADIUS * 0.1,
+    CX,
+    CY,
+    RADIUS,
+  );
+  shade.addColorStop(0, `rgb(${ocean.join(',')})`);
+  shade.addColorStop(1, `rgb(${edge.join(',')})`);
+
+  ctx.fillStyle = shade;
+  ctx.beginPath();
+  ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
  * Accepts line or polygon geometry. Polygons are stroked rather than filled,
  * because country outlines give the coast and the borders from one file where
  * a coastline set has no borders in it at all.
@@ -475,6 +693,11 @@ function buildGraticule() {
  * rather than one isolated pixel for the codec to discard.
  */
 function drawBasemap() {
+  if (GLOBE) {
+    drawBasemapGlobe();
+    return;
+  }
+
   const b = config.basemap;
   const colour = b.colour.join(',');
 
@@ -538,10 +761,36 @@ function rings(geometry) {
 }
 
 function project([lon, lat]) {
+  if (!GLOBE) {
+    return [
+      ((lon - VIEW.west) / (VIEW.east - VIEW.west)) * (WIDTH - 1),
+      ((VIEW.north - lat) / (VIEW.north - VIEW.south)) * (HEIGHT - 1),
+      true,
+    ];
+  }
+
+  // Orthographic: the view from infinitely far away, which is what a globe in
+  // a picture actually is. The third element is whether the point is on the
+  // near face - without it the far hemisphere draws straight through, and
+  // South America ends up sitting on top of Asia.
+  const l = lon * DEG - rotation;
+  const sinLat = Math.sin(lat * DEG);
+  const cosLat = Math.cos(lat * DEG);
+  const cosl = Math.cos(l);
+
   return [
-    ((lon - VIEW.west) / (VIEW.east - VIEW.west)) * (WIDTH - 1),
-    ((VIEW.north - lat) / (VIEW.north - VIEW.south)) * (HEIGHT - 1),
+    CX + RADIUS * cosLat * Math.sin(l),
+    CY - RADIUS * (COS_PHI0 * sinLat - SIN_PHI0 * cosLat * cosl),
+    SIN_PHI0 * sinLat + COS_PHI0 * cosLat * cosl > 0,
   ];
+}
+
+/** Pushes an off-globe point out onto the limb, so filled shapes keep a hull. */
+function toLimb([x, y]) {
+  const dx = x - CX;
+  const dy = y - CY;
+  const d = Math.hypot(dx, dy) || 1;
+  return [CX + (dx / d) * RADIUS, CY + (dy / d) * RADIUS];
 }
 
 function sizeOf(properties) {
