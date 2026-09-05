@@ -33,3 +33,7 @@ docs/quakes-globe.gif
 data/HydroRIVERS_v10_shp*
 data/rivers-world.geojson
 docs/rivers-globe.gif
+
+# Rendered loops. Large, and reproducible from `npm run render`; the readme
+# embeds reduced gifs instead.
+docs/*.mp4
