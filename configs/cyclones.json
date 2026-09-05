@@ -84,14 +84,15 @@
     "field": "d",
     "mode": "cycle",
     "spacing": 366,
-    "width": 0.05,
-    "direction": "up"
+    "width": 0.022,
+    "direction": "up",
+    "tail": 4.5
   },
   "alpha": {
     "base": 0.1,
-    "perUnit": 0.0012,
-    "pulse": 0.5,
-    "pulsePerUnit": 0.002
+    "perUnit": 0.001,
+    "pulse": 0.28,
+    "pulsePerUnit": 0.001
   },
   "source": "139,518 track segments from 4,182 storms · IBTrACS v04r01 · width and colour by wind speed",
   "watermark": "github.com/GeoCodeCrafter/pulsemap",
@@ -104,5 +105,10 @@
     ],
     "width": 0.9,
     "alpha": 0.85
+  },
+  "glow": {
+    "width": 4,
+    "alpha": 0.055,
+    "min": 75
   }
 }

@@ -163,6 +163,26 @@ version of this was visible in the PNG and simply gone from the mp4.
 config naming the fields. The cyclone map needed one new config key and no
 change to the rendering at all, which is the point of the three-channel design.
 
+## Two knobs worth knowing about
+
+**`pulse.tail`** makes the crest asymmetric — a sharp leading edge with a long
+decay behind it. A symmetric crest brightens and dims features in place, which
+reads as blinking; a tail reads as something travelling, which for storm tracks
+is what is actually happening. `1` is symmetric, `4.5` is what the cyclone map
+uses.
+
+**`glow`** draws a wide dim pass under the sharp one, so bright features bleed
+light instead of ending at a hard edge:
+
+```jsonc
+"glow": { "width": 4, "alpha": 0.055, "min": 75 }
+```
+
+`min` is a threshold on the size field — bloom every faint feature and you
+double the draw calls to add light nobody can see, so only the strong ones earn
+it. Keep `alpha` low: this composites additively on top of everything already
+there, and at 0.16 the busy basins blew out to flat white.
+
 ## Things that turned out to matter
 
 **Precompute everything that doesn't change between frames.** With tens of

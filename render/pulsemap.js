@@ -154,13 +154,25 @@ function draw(t = 0) {
   const pulse = config.pulse;
   const direction = pulse?.direction === 'up' ? -1 : 1;
   const spread = pulse?.width ?? 0.1;
+  const tail = pulse?.tail ?? 1;
+  const bloom = config.glow;
 
   for (const feature of features) {
     let glow = 0;
     if (pulse) {
       const wrapped = (((feature.phase + direction * t) % 1) + 1) % 1;
-      const offset = Math.min(wrapped, 1 - wrapped);
-      glow = Math.exp(-((offset / spread) ** 2));
+
+      // Asymmetric on purpose. A symmetric crest makes features brighten and
+      // dim in place, which reads as blinking; a sharp leading edge with a
+      // long decay behind it reads as something travelling, and for tracks
+      // that is exactly what is happening. `tail` is a multiple of the head
+      // width - 1 gives the old symmetric behaviour.
+      const ahead = wrapped;
+      const behind = 1 - wrapped;
+      glow = Math.max(
+        Math.exp(-((ahead / spread) ** 2)),
+        Math.exp(-((behind / (spread * tail)) ** 2)),
+      );
     }
 
     // The base layer never goes away. Between crests the whole structure is
@@ -173,19 +185,39 @@ function draw(t = 0) {
 
     const size = feature.size * (1 + glow * (config.size?.bloom ?? 0.6));
 
+    // Bloom: a wide, dim pass under the sharp one, so bright features bleed
+    // light rather than ending at a hard edge. Gated on a threshold because
+    // doubling the draw calls for every faint feature costs a lot of time to
+    // add glow nobody can see - only the strong ones earn it.
+    const glowing = bloom && feature.unit >= (bloom.min ?? 0) && glow > 0.02;
+
     if (config.kind === 'points') {
+      const [x, y] = feature.geometry;
+      if (glowing) {
+        ctx.fillStyle = `rgba(${feature.fill},${(alpha * (bloom.alpha ?? 0.15)).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, size * (bloom.width ?? 4), 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.fillStyle = `rgba(${feature.fill},${alpha.toFixed(3)})`;
       ctx.beginPath();
-      ctx.arc(feature.geometry[0], feature.geometry[1], size, 0, Math.PI * 2);
+      ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      ctx.strokeStyle = `rgba(${feature.fill},${alpha.toFixed(3)})`;
-      ctx.lineWidth = size;
       ctx.beginPath();
       feature.geometry.forEach(([x, y], index) => {
         if (index === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
+
+      if (glowing) {
+        ctx.strokeStyle = `rgba(${feature.fill},${(alpha * (bloom.alpha ?? 0.15)).toFixed(3)})`;
+        ctx.lineWidth = size * (bloom.width ?? 4);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = `rgba(${feature.fill},${alpha.toFixed(3)})`;
+      ctx.lineWidth = size;
       ctx.stroke();
     }
   }
