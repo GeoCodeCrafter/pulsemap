@@ -3,25 +3,106 @@
   "data": "data/cyclones.geojson",
   "kind": "lines",
   "projection": "plate",
-  "view": { "north": 68, "south": -55, "west": -180, "east": 180 },
+  "view": {
+    "north": 68,
+    "south": -55,
+    "west": -180,
+    "east": 180
+  },
   "width": 2400,
   "background": "#04060a",
-  "size": { "field": "w", "base": 0.035, "exponent": 0.85, "min": 0.4, "bloom": 1.6 },
+  "size": {
+    "field": "w",
+    "base": 0.035,
+    "exponent": 0.85,
+    "min": 0.4,
+    "bloom": 1.6
+  },
   "colour": {
     "field": "w",
     "mode": "ramp",
     "stops": [
-      [0, [56, 84, 140]],
-      [34, [64, 190, 214]],
-      [64, [140, 240, 150]],
-      [83, [255, 226, 112]],
-      [96, [255, 168, 70]],
-      [113, [255, 104, 68]],
-      [137, [255, 238, 240]]
+      [
+        0,
+        [
+          56,
+          84,
+          140
+        ]
+      ],
+      [
+        34,
+        [
+          64,
+          190,
+          214
+        ]
+      ],
+      [
+        64,
+        [
+          140,
+          240,
+          150
+        ]
+      ],
+      [
+        83,
+        [
+          255,
+          226,
+          112
+        ]
+      ],
+      [
+        96,
+        [
+          255,
+          168,
+          70
+        ]
+      ],
+      [
+        113,
+        [
+          255,
+          104,
+          68
+        ]
+      ],
+      [
+        137,
+        [
+          255,
+          238,
+          240
+        ]
+      ]
     ]
   },
-  "pulse": { "field": "d", "mode": "cycle", "spacing": 366, "width": 0.05, "direction": "up" },
-  "alpha": { "base": 0.1, "perUnit": 0.0012, "pulse": 0.5, "pulsePerUnit": 0.002 },
+  "pulse": {
+    "field": "d",
+    "mode": "cycle",
+    "spacing": 366,
+    "width": 0.05,
+    "direction": "up"
+  },
+  "alpha": {
+    "base": 0.1,
+    "perUnit": 0.0012,
+    "pulse": 0.5,
+    "pulsePerUnit": 0.002
+  },
   "source": "139,518 track segments from 4,182 storms · IBTrACS v04r01 · width and colour by wind speed",
-  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+  "watermark": "github.com/GeoCodeCrafter/pulsemap",
+  "basemap": {
+    "data": "data/world-coastline.geojson",
+    "colour": [
+      110,
+      138,
+      178
+    ],
+    "width": 0.65,
+    "alpha": 0.42
+  }
 }

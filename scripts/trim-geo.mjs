@@ -20,6 +20,15 @@ const CDN = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/mast
 /** Generous margin, so the view can move without re-running this. */
 const BOX = { west: -25, east: 45, south: 30, north: 75 };
 
+/**
+ * A world coastline for use as a faint underlay, at 1:50m rather than 1:10m.
+ *
+ * Drawn a pixel wide behind data, the finer set is 9.6 MB of detail that is
+ * invisible at any sensible zoom and just slows the page down.
+ */
+await download(`${CDN}/ne_50m_coastline.geojson`, 'data/world-coastline.geojson');
+console.log(`data/world-coastline.geojson — ${(statSync('data/world-coastline.geojson').size / 1e6).toFixed(2)} MB`);
+
 for (const [name, out] of [
   ['ne_10m_admin_0_countries', 'data/europe-countries.geojson'],
   ['ne_10m_coastline', 'data/europe-coastline.geojson'],

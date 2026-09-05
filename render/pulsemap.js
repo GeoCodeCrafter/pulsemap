@@ -53,6 +53,20 @@ canvas.width = WIDTH;
 canvas.height = HEIGHT;
 const ctx = canvas.getContext('2d');
 
+/**
+ * An optional faint underlay, drawn behind the data and never animated.
+ *
+ * Most of these maps don't need one: rivers draw their own coastline and
+ * earthquakes draw the plate boundaries, and putting geography under either
+ * would be answering a question the picture is supposed to raise. Cyclone
+ * tracks are the opposite case - they sit over open ocean and form no
+ * recognisable shape, so without a coastline you genuinely cannot tell what
+ * you are looking at or where.
+ */
+const basemap = config.basemap
+  ? await (await fetch(`../${config.basemap.data}`)).json()
+  : null;
+
 const features = prepare();
 
 window.pulsemap = {
@@ -126,6 +140,8 @@ function draw(t = 0) {
   ctx.fillStyle = config.background ?? '#04060a';
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+  if (basemap) drawBasemap();
+
   // Additive, so overlapping features accumulate light instead of painting
   // over one another. A confluence of a hundred streams, or a subduction zone
   // holding thousands of events, then reads brighter than a lone feature -
@@ -198,14 +214,14 @@ function annotate() {
   // finally *watched* at, which is usually a few hundred pixels wide in a
   // feed, so it is pinned to a proportion of the frame instead.
   const px = (fraction) => Math.max(9, Math.round(WIDTH * fraction));
-  const margin = px(0.016);
+  const margin = px(0.014);
   const mono = (fraction, weight = '') =>
     `${weight} ${px(fraction)}px ui-monospace, Menlo, Consolas, monospace`.trim();
 
   // Just tall enough to sit behind the type. White text over a bright feature
   // is unreadable on roughly one frame in five, and a scrim deep enough to fix
   // that while covering a third of the map is not a trade worth making.
-  const top = HEIGHT - px(0.058);
+  const top = HEIGHT - px(0.046);
   const scrim = ctx.createLinearGradient(0, top, 0, HEIGHT);
   scrim.addColorStop(0, 'rgba(4, 6, 10, 0)');
   scrim.addColorStop(0.5, 'rgba(4, 6, 10, 0.66)');
@@ -220,22 +236,47 @@ function annotate() {
 
   if (config.title) {
     ctx.fillStyle = 'rgba(238, 242, 248, 0.97)';
-    ctx.font = mono(0.018, '600');
-    ctx.fillText(config.title, margin, baseline - px(0.0145));
+    ctx.font = mono(0.0125, '600');
+    ctx.fillText(config.title, margin, baseline - px(0.0115));
   }
 
   if (config.source) {
     ctx.fillStyle = 'rgba(126, 137, 156, 0.95)';
-    ctx.font = mono(0.0092);
+    ctx.font = mono(0.0068);
     ctx.fillText(config.source, margin, baseline);
   }
 
   if (config.watermark) {
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(104, 114, 132, 0.95)';
-    ctx.font = mono(0.0092);
+    ctx.font = mono(0.0068);
     ctx.fillText(config.watermark, WIDTH - margin, baseline);
   }
+}
+
+/** Thin, dim, and drawn once under everything. Reference, not subject. */
+function drawBasemap() {
+  const b = config.basemap;
+  ctx.strokeStyle = `rgba(${b.colour.join(',')},${b.alpha ?? 0.22})`;
+  ctx.lineWidth = Math.max(0.5, (b.width ?? 0.6) * SCALE);
+  ctx.beginPath();
+
+  for (const feature of basemap.features) {
+    const parts =
+      feature.geometry.type === 'MultiLineString'
+        ? feature.geometry.coordinates
+        : [feature.geometry.coordinates];
+
+    for (const part of parts) {
+      part.forEach((position, index) => {
+        const [x, y] = project(position);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+    }
+  }
+
+  ctx.stroke();
 }
 
 function project([lon, lat]) {

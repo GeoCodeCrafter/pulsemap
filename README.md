@@ -134,9 +134,29 @@ older map shows shipping lanes more than storms; and only storms that reached
 34 kt, because below that the record reflects how willing each agency was to
 log a weak disturbance.
 
+This one is the exception to drawing nothing but the data. Rivers draw their
+own coastline and earthquakes draw the plate boundaries, so putting geography
+underneath either would answer the question the picture is meant to raise.
+Cyclone tracks sit over open ocean and form no recognisable shape, so without a
+reference you genuinely cannot tell what you are looking at. Hence `basemap`:
+
+```jsonc
+"basemap": {
+  "data": "data/world-coastline.geojson",
+  "colour": [110, 138, 178],
+  "width": 0.65,
+  "alpha": 0.42
+}
+```
+
+It is drawn once, behind everything, and never animated — reference, not
+subject. `npm run geo` fetches the coastline, at 1:50m rather than 1:10m
+because a finer set is 9.6 MB of detail that is invisible behind data at any
+sensible zoom.
+
 **Adding a dataset of your own** takes a prep script that writes GeoJSON and a
-config naming the fields. The cyclone map needed no engine changes at all —
-which is the point of the three-channel design.
+config naming the fields. The cyclone map needed one new config key and no
+change to the rendering at all, which is the point of the three-channel design.
 
 ## Things that turned out to matter
 
