@@ -301,6 +301,19 @@ function draw(t = 0) {
 
   const a = config.alpha ?? {};
   const pulse = config.pulse;
+
+  /**
+   * Features not currently lit are collected into shared paths and stroked
+   * once per colour-and-width combination.
+   *
+   * One stroke() per feature is the whole cost of this renderer at scale - at
+   * half a million river segments it is half a million path submissions a
+   * frame, and that, not the projection maths, is what put a ceiling on how
+   * much detail could be drawn. Only the small fraction inside the pulse needs
+   * individual treatment, so everything else collapses into a few dozen
+   * strokes and the rest of the budget goes on more rivers.
+   */
+  const batches = new Map();
   const direction = pulse?.direction === 'up' ? -1 : 1;
   const spread = pulse?.width ?? 0.1;
   const tail = pulse?.tail ?? 1;
@@ -353,6 +366,15 @@ function draw(t = 0) {
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.fill();
+    } else if (!glowing && glow < 0.015) {
+      // Resting: fold into the batch for its colour and width.
+      const key = `${feature.fill}|${feature.unit}`;
+      let batch = batches.get(key);
+      if (!batch) {
+        batch = { path: new Path2D(), fill: feature.fill, size: feature.size, alpha };
+        batches.set(key, batch);
+      }
+      traceLine(batch.path, feature.geometry);
     } else {
       ctx.beginPath();
       if (GLOBE) {
@@ -811,6 +833,34 @@ function project([lon, lat]) {
     CY - RADIUS * (COS_PHI0 * sinLat - SIN_PHI0 * cosLat * cosl),
     SIN_PHI0 * sinLat + COS_PHI0 * cosLat * cosl > 0,
   ];
+}
+
+/**
+ * Walks a line into any sink with moveTo/lineTo - a Path2D or the context.
+ *
+ * On a globe the line is broken wherever it passes behind the horizon rather
+ * than drawn through the planet.
+ */
+function traceLine(sink, geometry) {
+  if (!GLOBE) {
+    geometry.forEach(([x, y], index) => {
+      if (index === 0) sink.moveTo(x, y);
+      else sink.lineTo(x, y);
+    });
+    return;
+  }
+
+  let pen = false;
+  for (const position of geometry) {
+    const [x, y, visible] = project(position);
+    if (!visible) {
+      pen = false;
+      continue;
+    }
+    if (pen) sink.lineTo(x, y);
+    else sink.moveTo(x, y);
+    pen = true;
+  }
 }
 
 /** Pushes an off-globe point out onto the limb, so filled shapes keep a hull. */

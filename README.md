@@ -234,21 +234,24 @@ rotates once per loop:
 
 ![Every major river on Earth on a slowly rotating globe, water pulsing seaward](docs/readme-rivers-globe.gif)
 
-**Every major river on Earth** — 223,582 segments of Strahler order 6 and up,
-water pulsing seaward, on a globe that turns once every twenty seconds.
+**Every major river on Earth** — 1,064,519 segments of Strahler order 4 and up,
+water pulsing seaward, on a globe that turns once every thirty seconds.
 
 ```bash
 npm run rivers world && npm run render configs/rivers-globe.json
 ```
 
 The world file is a 519 MB download and takes a few minutes to walk: 8.5
-million segments at every order, of which order 6 and up is what survives at a
-globe's zoom.
+million segments at every order, of which order 4 and up is kept.
+
+A million line segments per frame is only viable because of the batching
+described below — one `stroke()` per feature would be a million path
+submissions a frame, and that, not the projection maths, is the ceiling on how
+much detail a frame can hold.
 
 Coverage is worth stating because it is the reason this subject was chosen:
 latitude −54.6° to 82.9°, longitude complete, and every landmass present
-roughly in proportion to its area — Asia 156k segments, South America 109k,
-Africa 102k, North America 78k, Oceania 29k, Europe 28k, Greenland 5k. The
+roughly in proportion to its area. The
 network is computed from a global elevation model rather than compiled from
 national reporting, so it cannot have a country-shaped hole in it. Antarctica
 is absent because it has no rivers.
@@ -308,6 +311,18 @@ each other; per feature the same rule correctly cuts only interior rings.
 The rivers and earthquakes deliberately have neither. Those two draw their own
 geography out of the data, and putting land underneath would answer the
 question the picture exists to raise.
+
+### Pulse width is in the field's own units
+
+`spacing x width` is the size of a crest **in whatever the pulse field
+measures**. On the Britain map, distance-to-sea in kilometres, that came to
+about 9 km — several pixels at that zoom, and clearly visible.
+
+The same numbers on a globe produce a crest narrower than a pixel: one pixel is
+around 33 km on a 1200 px Earth, so the pulse disappeared entirely and looked
+like it was not working. On a world view the crest needs to be hundreds of
+kilometres wide. Check it against your pixel scale, not against what looked
+right somewhere else.
 
 ## Two knobs worth knowing about
 

@@ -55,7 +55,7 @@ const REGIONS = {
    */
   world: {
     box: { west: -180, east: 180, south: -90, north: 90 },
-    minOrder: 6,
+    minOrder: 4,
     source: 'data/HydroRIVERS_v10_shp/HydroRIVERS_v10.shp',
   },
 };
