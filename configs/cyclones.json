@@ -96,13 +96,13 @@
   "source": "139,518 track segments from 4,182 storms · IBTrACS v04r01 · width and colour by wind speed",
   "watermark": "github.com/GeoCodeCrafter/pulsemap",
   "basemap": {
-    "data": "data/world-coastline.geojson",
+    "data": "data/world-countries.geojson",
     "colour": [
-      110,
-      138,
-      178
+      132,
+      164,
+      206
     ],
-    "width": 0.65,
-    "alpha": 0.42
+    "width": 0.9,
+    "alpha": 0.85
   }
 }

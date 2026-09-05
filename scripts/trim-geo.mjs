@@ -29,6 +29,11 @@ const BOX = { west: -25, east: 45, south: 30, north: 75 };
 await download(`${CDN}/ne_50m_coastline.geojson`, 'data/world-coastline.geojson');
 console.log(`data/world-coastline.geojson — ${(statSync('data/world-coastline.geojson').size / 1e6).toFixed(2)} MB`);
 
+// Country polygons rather than the coastline alone: stroking them gives coasts
+// and national borders in one pass, and a coastline file contains no borders.
+await download(`${CDN}/ne_50m_admin_0_countries.geojson`, 'data/world-countries.geojson');
+console.log(`data/world-countries.geojson — ${(statSync('data/world-countries.geojson').size / 1e6).toFixed(2)} MB`);
+
 for (const [name, out] of [
   ['ne_10m_admin_0_countries', 'data/europe-countries.geojson'],
   ['ne_10m_coastline', 'data/europe-coastline.geojson'],

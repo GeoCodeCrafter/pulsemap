@@ -142,17 +142,22 @@ reference you genuinely cannot tell what you are looking at. Hence `basemap`:
 
 ```jsonc
 "basemap": {
-  "data": "data/world-coastline.geojson",
-  "colour": [110, 138, 178],
-  "width": 0.65,
-  "alpha": 0.42
+  "data": "data/world-countries.geojson",
+  "colour": [132, 164, 206],
+  "width": 0.9,
+  "alpha": 0.85
 }
 ```
 
 It is drawn once, behind everything, and never animated — reference, not
-subject. `npm run geo` fetches the coastline, at 1:50m rather than 1:10m
-because a finer set is 9.6 MB of detail that is invisible behind data at any
-sensible zoom.
+subject. Polygons are stroked rather than filled, so country outlines give the
+coast *and* the national borders from one file; a coastline set has no borders
+in it at all. `npm run geo` fetches it at 1:50m rather than 1:10m, because the
+finer set is three times the size in detail nothing can resolve behind data.
+
+Do not make it as faint as looks right in a still. A low-contrast line on a
+near-black ground is the first thing an H.264 encoder discards, so the first
+version of this was visible in the PNG and simply gone from the mp4.
 
 **Adding a dataset of your own** takes a prep script that writes GeoJSON and a
 config naming the fields. The cyclone map needed one new config key and no

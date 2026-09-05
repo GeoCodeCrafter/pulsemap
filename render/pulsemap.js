@@ -262,10 +262,10 @@ function drawBasemap() {
   ctx.beginPath();
 
   for (const feature of basemap.features) {
-    const parts =
-      feature.geometry.type === 'MultiLineString'
-        ? feature.geometry.coordinates
-        : [feature.geometry.coordinates];
+    // Accepts line or polygon geometry. Polygons are stroked rather than
+    // filled, because country outlines give the coast and the borders in one
+    // file where a coastline set has no borders in it at all.
+    const parts = rings(feature.geometry);
 
     for (const part of parts) {
       part.forEach((position, index) => {
@@ -277,6 +277,21 @@ function drawBasemap() {
   }
 
   ctx.stroke();
+}
+
+/** Flattens any geometry type down to a list of coordinate rings. */
+function rings(geometry) {
+  switch (geometry?.type) {
+    case 'LineString':
+      return [geometry.coordinates];
+    case 'MultiLineString':
+    case 'Polygon':
+      return geometry.coordinates;
+    case 'MultiPolygon':
+      return geometry.coordinates.flat();
+    default:
+      return [];
+  }
 }
 
 function project([lon, lat]) {

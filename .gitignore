@@ -26,3 +26,4 @@ data/cyclones.geojson
 # means `npm run render` works straight after a clone, without a 250 MB
 # download first.
 data/world-coastline.geojson
+data/world-countries.geojson
