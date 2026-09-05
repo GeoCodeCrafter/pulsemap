@@ -221,6 +221,33 @@ dates for rather than a complete one.
 npm run powerplants && npm run render configs/powerplants.json
 ```
 
+### Making the ground less bare
+
+Outlines alone leave the continents as empty as the sea. Two optional layers
+fill that in without competing with the data:
+
+```jsonc
+"basemap": {
+  "data": "data/world-countries.geojson",
+  "colour": [120, 154, 200], "width": 0.8, "alpha": 0.55,
+  "fill": { "colour": [13, 20, 33], "alpha": 1 },
+  "glow": { "width": 7, "alpha": 0.12, "passes": 3 }
+},
+"graticule": { "step": 15, "colour": [74, 100, 134], "alpha": 0.13 }
+```
+
+The graticule is drawn *before* the land fill, so the grid shows over water
+only — over everything it competes with the data, over ocean it just stops the
+empty half of the frame being a void.
+
+Fills are applied per country rather than as one path. `evenodd` on a combined
+path treats two overlapping country polygons as a hole and punches them out of
+each other; per feature the same rule correctly cuts only interior rings.
+
+The rivers and earthquakes deliberately have neither. Those two draw their own
+geography out of the data, and putting land underneath would answer the
+question the picture exists to raise.
+
 ## Two knobs worth knowing about
 
 **`pulse.tail`** makes the crest asymmetric — a sharp leading edge with a long

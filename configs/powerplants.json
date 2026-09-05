@@ -1,5 +1,4 @@
 {
-  "title": "Every power station on Earth, in the order they were built",
   "data": "data/power-plants.csv",
   "kind": "points",
   "csv": {
@@ -32,6 +31,14 @@
       "width": 7,
       "alpha": 0.12,
       "passes": 3
+    },
+    "fill": {
+      "colour": [
+        13,
+        20,
+        33
+      ],
+      "alpha": 1
     }
   },
   "size": {
@@ -128,6 +135,15 @@
     "base": 0.15,
     "pulse": 0.8
   },
-  "source": "17,447 stations with a known build year · WRI Global Power Plant Database · size by capacity, colour by fuel",
-  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+  "watermark": "github.com/GeoCodeCrafter/pulsemap",
+  "graticule": {
+    "step": 15,
+    "colour": [
+      74,
+      100,
+      134
+    ],
+    "alpha": 0.13,
+    "width": 0.5
+  }
 }

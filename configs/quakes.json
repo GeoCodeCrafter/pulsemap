@@ -1,5 +1,4 @@
 {
-  "title": "Every earthquake since 2019",
   "data": "data/quakes.geojson",
   "kind": "points",
   "projection": "plate",
@@ -83,6 +82,5 @@
     "base": 0.38,
     "pulse": 0.66
   },
-  "source": "58,233 events M4.5+ · USGS catalogue 2019-2026 · size by magnitude, colour by depth",
   "watermark": "github.com/GeoCodeCrafter/pulsemap"
 }

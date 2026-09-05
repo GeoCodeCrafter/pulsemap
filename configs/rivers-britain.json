@@ -1,5 +1,4 @@
 {
-  "title": "Britain and Ireland, drawn using nothing but their rivers",
   "data": "data/rivers-britain.geojson",
   "kind": "lines",
   "view": {
@@ -86,6 +85,5 @@
     "pulse": 0.34,
     "pulsePerUnit": 0.05
   },
-  "source": "28,534 river segments · HydroRIVERS v1.0 · width by Strahler order, colour by catchment",
   "watermark": "github.com/GeoCodeCrafter/pulsemap"
 }

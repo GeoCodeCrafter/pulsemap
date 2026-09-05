@@ -1,5 +1,4 @@
 {
-  "title": "Europe, drawn using nothing but its rivers",
   "data": "data/rivers-europe.geojson",
   "kind": "lines",
   "view": {
@@ -86,6 +85,5 @@
     "pulse": 0.3,
     "pulsePerUnit": 0.04
   },
-  "source": "72,674 river segments · HydroRIVERS v1.0 · width by Strahler order, colour by catchment",
   "watermark": "github.com/GeoCodeCrafter/pulsemap"
 }

@@ -169,6 +169,19 @@ const basemap = config.basemap
  */
 const basemapPath = basemap ? buildBasemapPath() : null;
 
+/**
+ * One path per country, for filling.
+ *
+ * The outlines have to be filled per feature rather than as one combined path:
+ * `evenodd` on a single path would treat two overlapping countries as a hole
+ * and punch them out of each other. Per feature, the same rule correctly cuts
+ * only the interior rings - lakes.
+ */
+const basemapShapes =
+  basemap && config.basemap.fill ? basemap.features.map((f) => ringPath(f.geometry)) : null;
+
+const graticulePath = config.graticule ? buildGraticule() : null;
+
 const features = prepare();
 
 window.pulsemap = {
@@ -352,16 +365,19 @@ function annotate() {
   const mono = (fraction, weight = '') =>
     `${weight} ${px(fraction)}px ui-monospace, Menlo, Consolas, monospace`.trim();
 
-  // Just tall enough to sit behind the type. White text over a bright feature
-  // is unreadable on roughly one frame in five, and a scrim deep enough to fix
-  // that while covering a third of the map is not a trade worth making.
-  const top = HEIGHT - px(0.046);
-  const scrim = ctx.createLinearGradient(0, top, 0, HEIGHT);
-  scrim.addColorStop(0, 'rgba(4, 6, 10, 0)');
-  scrim.addColorStop(0.5, 'rgba(4, 6, 10, 0.66)');
-  scrim.addColorStop(1, 'rgba(4, 6, 10, 0.93)');
-  ctx.fillStyle = scrim;
-  ctx.fillRect(0, top, WIDTH, HEIGHT - top);
+  // The scrim only earns its place under a block of text. With just the mark in
+  // the corner there is nothing to protect, and a gradient across the full
+  // width to serve one short line is a band of dead map for no reason - a
+  // shadow on the mark itself does the same job for nothing.
+  if (config.title || config.source) {
+    const top = HEIGHT - px(0.046);
+    const scrim = ctx.createLinearGradient(0, top, 0, HEIGHT);
+    scrim.addColorStop(0, 'rgba(4, 6, 10, 0)');
+    scrim.addColorStop(0.5, 'rgba(4, 6, 10, 0.66)');
+    scrim.addColorStop(1, 'rgba(4, 6, 10, 0.93)');
+    ctx.fillStyle = scrim;
+    ctx.fillRect(0, top, WIDTH, HEIGHT - top);
+  }
 
   const baseline = HEIGHT - margin;
 
@@ -382,9 +398,14 @@ function annotate() {
 
   if (config.watermark) {
     ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(104, 114, 132, 0.95)';
     ctx.font = mono(0.0068);
+    // Standing on its own now, so it carries its own contrast rather than
+    // relying on a scrim that is no longer drawn.
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = px(0.004);
+    ctx.fillStyle = 'rgba(126, 138, 158, 0.95)';
     ctx.fillText(config.watermark, WIDTH - margin, baseline);
+    ctx.shadowBlur = 0;
   }
 }
 
@@ -395,15 +416,49 @@ function annotate() {
  */
 function buildBasemapPath() {
   const path = new Path2D();
+  for (const feature of basemap.features) addRings(path, feature.geometry);
+  return path;
+}
 
-  for (const feature of basemap.features) {
-    for (const part of rings(feature.geometry)) {
-      part.forEach((position, index) => {
-        const [x, y] = project(position);
-        if (index === 0) path.moveTo(x, y);
-        else path.lineTo(x, y);
-      });
-    }
+function ringPath(geometry) {
+  const path = new Path2D();
+  addRings(path, geometry);
+  return path;
+}
+
+function addRings(path, geometry) {
+  for (const part of rings(geometry)) {
+    part.forEach((position, index) => {
+      const [x, y] = project(position);
+      if (index === 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
+    });
+  }
+}
+
+/**
+ * Meridians and parallels.
+ *
+ * Straight lines are correct here only because the projection is
+ * equirectangular, which maps longitude and latitude linearly onto x and y.
+ * Any projection with curvature would need these subdivided.
+ */
+function buildGraticule() {
+  const step = config.graticule.step ?? 15;
+  const path = new Path2D();
+
+  for (let lon = Math.ceil(VIEW.west / step) * step; lon <= VIEW.east; lon += step) {
+    const [x0, y0] = project([lon, VIEW.north]);
+    const [x1, y1] = project([lon, VIEW.south]);
+    path.moveTo(x0, y0);
+    path.lineTo(x1, y1);
+  }
+
+  for (let lat = Math.ceil(VIEW.south / step) * step; lat <= VIEW.north; lat += step) {
+    const [x0, y0] = project([VIEW.west, lat]);
+    const [x1, y1] = project([VIEW.east, lat]);
+    path.moveTo(x0, y0);
+    path.lineTo(x1, y1);
   }
 
   return path;
@@ -422,6 +477,26 @@ function buildBasemapPath() {
 function drawBasemap() {
   const b = config.basemap;
   const colour = b.colour.join(',');
+
+  // Graticule first, so the land fill covers it and the grid reads over water
+  // only. Drawn over everything it competes with the data; drawn over ocean it
+  // just stops the empty half of the frame being a void.
+  if (graticulePath) {
+    const g = config.graticule;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = `rgba(${(g.colour ?? [90, 116, 150]).join(',')},${g.alpha ?? 0.1})`;
+    ctx.lineWidth = Math.max(0.5, (g.width ?? 0.5) * SCALE);
+    ctx.stroke(graticulePath);
+  }
+
+  // Land as a solid, barely-lifted tone. Outlines alone leave the continents
+  // as empty as the sea, so nothing tells you which is which until you already
+  // know the shapes.
+  if (basemapShapes) {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = `rgba(${b.fill.colour.join(',')},${b.fill.alpha ?? 1})`;
+    for (const shape of basemapShapes) ctx.fill(shape, 'evenodd');
+  }
   const width = Math.max(0.5, (b.width ?? 0.9) * SCALE);
   const alpha = b.alpha ?? 0.85;
 

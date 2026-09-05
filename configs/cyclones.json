@@ -1,5 +1,4 @@
 {
-  "title": "Every tropical cyclone since 1980",
   "data": "data/cyclones.geojson",
   "kind": "lines",
   "projection": "plate",
@@ -94,7 +93,6 @@
     "pulse": 0.28,
     "pulsePerUnit": 0.001
   },
-  "source": "139,518 track segments from 4,182 storms · IBTrACS v04r01 · width and colour by wind speed",
   "watermark": "github.com/GeoCodeCrafter/pulsemap",
   "basemap": {
     "data": "data/world-countries.geojson",
@@ -109,11 +107,29 @@
       "width": 7,
       "alpha": 0.13,
       "passes": 3
+    },
+    "fill": {
+      "colour": [
+        13,
+        20,
+        33
+      ],
+      "alpha": 1
     }
   },
   "glow": {
     "width": 4,
     "alpha": 0.055,
     "min": 75
+  },
+  "graticule": {
+    "step": 15,
+    "colour": [
+      74,
+      100,
+      134
+    ],
+    "alpha": 0.13,
+    "width": 0.5
   }
 }
