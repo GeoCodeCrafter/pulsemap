@@ -3,7 +3,7 @@
 Turn geospatial data into animated maps. Point it at a GeoJSON, say which
 fields drive width, colour and the pulse, get a 4K loop.
 
-![Britain and Ireland drawn entirely from their rivers, with pulses of light travelling downstream to the sea](docs/rivers-britain.gif)
+![Britain and Ireland drawn entirely from their rivers, with pulses of light travelling downstream to the sea](docs/readme-rivers-britain.gif)
 
 There is no coastline in that image and no landmass. Every line is a river
 segment. The islands appear because drainage fills the land and stops at the
@@ -92,7 +92,7 @@ npm run rivers europe && npm run render configs/rivers-europe.json
 **Every earthquake since 2019** — 58,233 events, M4.5 and up, from the USGS
 catalogue, pulsing in the order they occurred.
 
-![The world's plate boundaries drawn only from earthquake locations](docs/quakes.gif)
+![The world's plate boundaries drawn only from earthquake locations](docs/readme-quakes.gif)
 
 No coastlines and no plate boundaries are drawn — the boundaries appear because
 that is where the crust moves. Colour is depth on the usual convention, shallow

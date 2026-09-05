@@ -4,6 +4,13 @@ node_modules/
 # Frame dumps from a render in progress.
 docs/.frames-*/
 
+# The full-size loops, kept for posting rather than for the repo: at 150 frames
+# a gif of one of these runs to 15 MB. docs/readme-*.gif are the reduced
+# versions the README embeds, and both come back from `npm run render`.
+docs/rivers-britain.gif
+docs/rivers-europe.gif
+docs/quakes.gif
+
 # Raw downloads and the larger derived datasets. Everything here is
 # reproducible from the scripts in scripts/, and together they run to a few
 # hundred megabytes.

@@ -190,15 +190,22 @@ function draw(t = 0) {
  * subreddits that ban outright links.
  */
 function annotate() {
-  const px = (n) => Math.round(n * SCALE);
-  const margin = px(30);
-  const mono = (size, weight = '') =>
-    `${weight} ${px(size)}px ui-monospace, Menlo, Consolas, monospace`.trim();
+  // Sized as a fraction of the frame, not scaled off the render width.
+  //
+  // Tying type to SCALE meant a smaller render produced smaller text, so the
+  // loop exported for social ended up with a 13px title that a video codec
+  // then finished off. Type has to be legible at whatever size the thing is
+  // finally *watched* at, which is usually a few hundred pixels wide in a
+  // feed, so it is pinned to a proportion of the frame instead.
+  const px = (fraction) => Math.max(9, Math.round(WIDTH * fraction));
+  const margin = px(0.016);
+  const mono = (fraction, weight = '') =>
+    `${weight} ${px(fraction)}px ui-monospace, Menlo, Consolas, monospace`.trim();
 
   // Just tall enough to sit behind the type. White text over a bright feature
   // is unreadable on roughly one frame in five, and a scrim deep enough to fix
   // that while covering a third of the map is not a trade worth making.
-  const top = HEIGHT - px(96);
+  const top = HEIGHT - px(0.058);
   const scrim = ctx.createLinearGradient(0, top, 0, HEIGHT);
   scrim.addColorStop(0, 'rgba(4, 6, 10, 0)');
   scrim.addColorStop(0.5, 'rgba(4, 6, 10, 0.66)');
@@ -213,20 +220,20 @@ function annotate() {
 
   if (config.title) {
     ctx.fillStyle = 'rgba(238, 242, 248, 0.97)';
-    ctx.font = mono(19, '600');
-    ctx.fillText(config.title, margin, baseline - px(24));
+    ctx.font = mono(0.018, '600');
+    ctx.fillText(config.title, margin, baseline - px(0.0145));
   }
 
   if (config.source) {
     ctx.fillStyle = 'rgba(126, 137, 156, 0.95)';
-    ctx.font = mono(11);
+    ctx.font = mono(0.0092);
     ctx.fillText(config.source, margin, baseline);
   }
 
   if (config.watermark) {
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(104, 114, 132, 0.95)';
-    ctx.font = mono(11);
+    ctx.font = mono(0.0092);
     ctx.fillText(config.watermark, WIDTH - margin, baseline);
   }
 }
