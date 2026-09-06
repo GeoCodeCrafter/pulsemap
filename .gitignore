@@ -7,10 +7,6 @@ docs/.frames-*/
 # The full-size loops, kept for posting rather than for the repo: at 150 frames
 # a gif of one of these runs to 15 MB. docs/readme-*.gif are the reduced
 # versions the README embeds, and both come back from `npm run render`.
-docs/rivers-britain.gif
-docs/rivers-europe.gif
-docs/quakes.gif
-docs/cyclones.gif
 
 # Raw downloads and the larger derived datasets. Everything here is
 # reproducible from the scripts in scripts/, and together they run to a few
@@ -28,12 +24,15 @@ data/cyclones.geojson
 data/world-coastline.geojson
 data/world-countries.geojson
 data/power-plants.csv
-docs/powerplants.gif
-docs/quakes-globe.gif
 data/HydroRIVERS_v10_shp*
 data/rivers-world.geojson
-docs/rivers-globe.gif
 
 # Rendered loops. Large, and reproducible from `npm run render`; the readme
 # embeds reduced gifs instead.
 docs/*.mp4
+
+# Full-size rendered loops. Listing them by name kept letting new ones through -
+# a 90 MB gif reached the repo that way. Everything except the reduced readme
+# copies is ignored, and all of it rebuilds from `npm run render`.
+docs/*.gif
+!docs/readme-*.gif
