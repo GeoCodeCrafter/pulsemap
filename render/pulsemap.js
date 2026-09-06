@@ -874,8 +874,23 @@ function toLimb([x, y]) {
 function sizeOf(properties) {
   const s = config.size;
   if (!s) return SCALE;
-  const value = Math.max(0, Number(properties[s.field] ?? 1) - (s.offset ?? 0));
+  const raw = Math.max(0, Number(properties[s.field] ?? 1) - (s.offset ?? 0));
+  const value = s.scale === 'log' ? Math.log10(1 + raw) : raw;
   return Math.max(SCALE * (s.min ?? 0.5), SCALE * s.base * Math.pow(value, s.exponent ?? 1));
+}
+
+/**
+ * Compresses a quantity that spans orders of magnitude.
+ *
+ * River discharge runs from nothing to the Amazon's 205,000 cubic metres a
+ * second, with a median of 27. Mapped linearly, everything on Earth except the
+ * Amazon lands in the first pixel of the ramp and the map is one bright line
+ * through Brazil on a black field. log10(1 + v) rather than log10(v) so that a
+ * genuinely dry channel is zero rather than negative infinity - and dry
+ * channels are 5% of the network, so that case is not hypothetical.
+ */
+function toScale(value, scale) {
+  return scale === 'log' ? Math.log10(1 + Math.max(0, value)) : value;
 }
 
 function colourOf(properties) {
@@ -900,12 +915,18 @@ function colourOf(properties) {
     return c.map[value] ?? c.fallback ?? [140, 150, 170];
   }
 
+  // Stops stay in the field's real units so a config remains readable, but the
+  // interpolation happens in whatever scale is asked for.
   const stops = c.stops;
+  const at = toScale(value, c.scale);
+
   for (let i = 1; i < stops.length; i++) {
     if (value <= stops[i][0]) {
       const [v0, c0] = stops[i - 1];
       const [v1, c1] = stops[i];
-      const k = (value - v0) / (v1 - v0);
+      const lo = toScale(v0, c.scale);
+      const hi = toScale(v1, c.scale);
+      const k = hi === lo ? 0 : (at - lo) / (hi - lo);
       return [0, 1, 2].map((n) => Math.round(c0[n] + k * (c1[n] - c0[n])));
     }
   }

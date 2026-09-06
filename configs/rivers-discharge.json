@@ -1,0 +1,97 @@
+{
+  "data": "data/rivers-world.geojson",
+  "kind": "lines",
+  "projection": "plate",
+  "view": {
+    "north": 78,
+    "south": -56,
+    "west": -180,
+    "east": 180
+  },
+  "width": 2400,
+  "background": "#05060a",
+  "size": {
+    "field": "d",
+    "scale": "log",
+    "base": 0.5,
+    "exponent": 1.15,
+    "min": 0.3,
+    "bloom": 0.8
+  },
+  "colour": {
+    "field": "d",
+    "mode": "ramp",
+    "scale": "log",
+    "stops": [
+      [
+        0,
+        [
+          92,
+          66,
+          44
+        ]
+      ],
+      [
+        0.5,
+        [
+          126,
+          96,
+          62
+        ]
+      ],
+      [
+        10,
+        [
+          52,
+          104,
+          138
+        ]
+      ],
+      [
+        100,
+        [
+          46,
+          158,
+          206
+        ]
+      ],
+      [
+        1000,
+        [
+          104,
+          220,
+          242
+        ]
+      ],
+      [
+        20000,
+        [
+          198,
+          246,
+          255
+        ]
+      ],
+      [
+        205604,
+        [
+          255,
+          255,
+          255
+        ]
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "k",
+    "mode": "cycle",
+    "spacing": 1200,
+    "width": 0.11,
+    "tail": 3,
+    "direction": "down"
+  },
+  "alpha": {
+    "base": 0.17,
+    "pulse": 0.46
+  },
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

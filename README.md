@@ -285,6 +285,37 @@ same black as everything else and there is no planet, only scattered
 continents. The radial gradient is what suggests curvature — a flat fill reads
 as a sticker.
 
+### Log scales
+
+Some quantities span orders of magnitude. River discharge runs from nothing to
+the Amazon's 205,000 cubic metres a second, with a median of 27 — mapped
+linearly, everything on Earth except the Amazon lands in the first pixel of the
+ramp:
+
+```jsonc
+"size":   { "field": "d", "scale": "log", "base": 0.5, "exponent": 1.15 },
+"colour": { "field": "d", "mode": "ramp", "scale": "log", "stops": [ ... ] }
+```
+
+Stops stay in the field's real units so a config remains readable; only the
+interpolation happens in log space. It uses `log10(1 + v)` rather than
+`log10(v)` so a genuine zero is zero rather than negative infinity — and 5% of
+river segments carry no water at all, so that case is not hypothetical.
+
+**Every river on Earth, coloured by how much water it carries**
+
+![World rivers coloured by mean discharge, the Sahara dry brown and the Amazon blazing white](docs/readme-rivers-discharge.gif)
+
+Same 1,064,519 segments as the globe, coloured by long-term mean discharge
+instead of by catchment. The Sahara, Arabia, central Australia and the Kalahari
+have dense, fully formed drainage networks that are almost entirely dry — 46%
+of segments inside the Sahara have a mean discharge of about zero, against 5%
+worldwide. The Nile crosses it as a single bright thread.
+
+```bash
+npm run rivers world && npm run render configs/rivers-discharge.json
+```
+
 ### Making the ground less bare
 
 Outlines alone leave the continents as empty as the sea. Two optional layers
