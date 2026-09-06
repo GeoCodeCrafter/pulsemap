@@ -36,3 +36,6 @@ docs/*.mp4
 # copies is ignored, and all of it rebuilds from `npm run render`.
 docs/*.gif
 !docs/readme-*.gif
+data/HydroLAKES_*
+data/lakes.geojson
+data/glaciers.csv

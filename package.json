@@ -15,7 +15,9 @@
     "quakes": "node scripts/quakes.mjs",
     "cyclones": "node scripts/cyclones.mjs",
     "geo": "node scripts/trim-geo.mjs",
-    "powerplants": "node scripts/powerplants.mjs"
+    "powerplants": "node scripts/powerplants.mjs",
+    "lakes": "node scripts/lakes.mjs",
+    "glaciers": "node scripts/glaciers.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

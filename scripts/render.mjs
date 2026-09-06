@@ -37,7 +37,6 @@ const FRAMES = flag('frames', 100);
 const FPS = flag('fps', 20);
 const stillOnly = args.includes('--still-only');
 
-const PORT = 5220;
 const TYPES = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -56,7 +55,11 @@ const server = createServer(async (request, response) => {
     response.writeHead(404).end('not found');
   }
 });
-await new Promise((resolve) => server.listen(PORT, resolve));
+// Port 0 asks the OS for a free one. A fixed port meant a second render while
+// one was already going died on EADDRINUSE, which is exactly when you want to
+// queue two of them up.
+await new Promise((resolve) => server.listen(0, resolve));
+const PORT = server.address().port;
 
 const browser = await chromium.launch();
 mkdirSync('docs', { recursive: true });
@@ -78,7 +81,12 @@ if (!stillOnly) {
       // Never render t = 1: it is the same picture as t = 0, and including
       // both makes the loop hitch for exactly one frame.
       await page.evaluate((t) => window.pulsemap.draw(t), i / FRAMES);
-      writeFileSync(`${dir}/f${String(i).padStart(4, '0')}.png`, await canvas.screenshot({ type: 'png' }));
+      // JPEG rather than PNG for the intermediate frames. Lossless encoding of
+      // a 5.5 megapixel frame is the single slowest step in a 4K render - more
+      // than the projection and the drawing put together - and x264 discards
+      // far more than the difference on the next pass anyway. It also keeps a
+      // 750 frame dump to a few hundred megabytes instead of several gigabytes.
+      writeFileSync(`${dir}/f${String(i).padStart(4, '0')}.jpg`, await canvas.screenshot({ type: 'jpeg', quality: 95 }));
       if (i % 20 === 0) process.stdout.write(`\r  ${i}/${FRAMES}`);
     }
     process.stdout.write(`\r  ${FRAMES}/${FRAMES} frames\n`);
@@ -93,12 +101,12 @@ if (!stillOnly) {
   // the dark gradient and the marks themselves collapse, while ordered dither
   // lays a visible crosshatch across the background. Error-diffusion costs some
   // file size and keeps the small features intact.
-  ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.png`,
+  ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.jpg`,
     '-vf', 'palettegen=max_colors=256:stats_mode=diff', `${dir}/palette.png`]);
-  ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.png`, '-i', `${dir}/palette.png`,
+  ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.jpg`, '-i', `${dir}/palette.png`,
     '-lavfi', '[0:v][1:v]paletteuse=dither=sierra2_4a:diff_mode=rectangle',
     '-loop', '0', `docs/${name}.gif`]);
-  ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.png`,
+  ffmpeg(['-y', '-framerate', String(FPS), '-i', `${dir}/f%04d.jpg`,
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
     // H.264 with 4:2:0 chroma cannot encode an odd dimension, and x264's
     // complaint about it is a bare "invalid argument" with a zero-byte file.

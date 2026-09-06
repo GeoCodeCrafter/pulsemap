@@ -1,0 +1,133 @@
+{
+  "data": "data/lakes.geojson",
+  "kind": "points",
+  "projection": "plate",
+  "view": {
+    "north": 83,
+    "south": -56,
+    "west": -180,
+    "east": 180
+  },
+  "width": 3840,
+  "background": "#04060a",
+  "basemap": {
+    "data": "data/world-countries.geojson",
+    "colour": [
+      96,
+      124,
+      166
+    ],
+    "width": 0.55,
+    "alpha": 0.3,
+    "fill": {
+      "colour": [
+        10,
+        15,
+        25
+      ],
+      "alpha": 1
+    },
+    "glow": {
+      "width": 5,
+      "alpha": 0.08,
+      "passes": 2
+    }
+  },
+  "graticule": {
+    "step": 15,
+    "colour": [
+      70,
+      96,
+      132
+    ],
+    "alpha": 0.09,
+    "width": 0.4
+  },
+  "size": {
+    "field": "a",
+    "scale": "log",
+    "base": 0.8,
+    "exponent": 1,
+    "min": 0.32,
+    "bloom": 2.2
+  },
+  "colour": {
+    "field": "e",
+    "mode": "ramp",
+    "stops": [
+      [
+        -415,
+        [
+          64,
+          226,
+          214
+        ]
+      ],
+      [
+        0,
+        [
+          70,
+          150,
+          255
+        ]
+      ],
+      [
+        200,
+        [
+          110,
+          210,
+          255
+        ]
+      ],
+      [
+        600,
+        [
+          150,
+          240,
+          190
+        ]
+      ],
+      [
+        1500,
+        [
+          255,
+          222,
+          120
+        ]
+      ],
+      [
+        3000,
+        [
+          255,
+          150,
+          80
+        ]
+      ],
+      [
+        5813,
+        [
+          255,
+          246,
+          240
+        ]
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "e",
+    "mode": "sweep",
+    "width": 0.035,
+    "tail": 3,
+    "direction": "up"
+  },
+  "glow": {
+    "width": 3.5,
+    "alpha": 0.05,
+    "min": 50
+  },
+  "alpha": {
+    "base": 0.46,
+    "pulse": 0.62
+  },
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

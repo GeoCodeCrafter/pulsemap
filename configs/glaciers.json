@@ -1,0 +1,141 @@
+{
+  "data": "data/glaciers.csv",
+  "kind": "points",
+  "csv": {
+    "lat": "cenlat",
+    "lon": "cenlon",
+    "require": [
+      "area_km2",
+      "zmed_m"
+    ]
+  },
+  "projection": "plate",
+  "view": {
+    "north": 84,
+    "south": -82,
+    "west": -180,
+    "east": 180
+  },
+  "width": 3840,
+  "background": "#04060a",
+  "basemap": {
+    "data": "data/world-countries.geojson",
+    "colour": [
+      104,
+      132,
+      172
+    ],
+    "width": 0.55,
+    "alpha": 0.3,
+    "fill": {
+      "colour": [
+        11,
+        16,
+        26
+      ],
+      "alpha": 1
+    },
+    "glow": {
+      "width": 5,
+      "alpha": 0.08,
+      "passes": 2
+    }
+  },
+  "graticule": {
+    "step": 15,
+    "colour": [
+      70,
+      96,
+      132
+    ],
+    "alpha": 0.09,
+    "width": 0.4
+  },
+  "size": {
+    "field": "area_km2",
+    "scale": "log",
+    "base": 0.9,
+    "exponent": 1,
+    "min": 0.3,
+    "bloom": 2.2
+  },
+  "colour": {
+    "field": "zmed_m",
+    "mode": "ramp",
+    "stops": [
+      [
+        -50,
+        [
+          120,
+          220,
+          255
+        ]
+      ],
+      [
+        800,
+        [
+          90,
+          170,
+          255
+        ]
+      ],
+      [
+        2000,
+        [
+          120,
+          240,
+          220
+        ]
+      ],
+      [
+        3500,
+        [
+          160,
+          245,
+          150
+        ]
+      ],
+      [
+        5000,
+        [
+          255,
+          224,
+          120
+        ]
+      ],
+      [
+        6500,
+        [
+          255,
+          152,
+          86
+        ]
+      ],
+      [
+        8120,
+        [
+          255,
+          250,
+          246
+        ]
+      ]
+    ]
+  },
+  "pulse": {
+    "field": "zmed_m",
+    "mode": "sweep",
+    "width": 0.035,
+    "tail": 3,
+    "direction": "up"
+  },
+  "glow": {
+    "width": 3.5,
+    "alpha": 0.055,
+    "min": 20
+  },
+  "alpha": {
+    "base": 0.42,
+    "pulse": 0.62
+  },
+  "watermark": "github.com/GeoCodeCrafter/pulsemap"
+}

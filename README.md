@@ -316,6 +316,41 @@ worldwide. The Nile crosses it as a single bright thread.
 npm run rivers world && npm run render configs/rivers-discharge.json
 ```
 
+**Every glacier on Earth, by altitude** — 274,531 from the Randolph Glacier
+Inventory v7, a complete global inventory. Size is area, colour and pulse are
+median elevation, so the wave climbs from sea-level ice to 8,116 m.
+
+![Every glacier on Earth lighting up as a wave climbs from sea level to the Himalaya](docs/readme-glaciers.gif)
+
+Watch it climb and the snow line rises toward the equator in front of you.
+Antarctica, Greenland and the Arctic islands go first, at sea level. Alaska,
+Norway and Patagonia next. By the time the wave reaches 5,000 m everything on
+the planet has gone dark except the Himalaya, the Karakoram and Tibet. The
+median glacier worldwide sits at 3,717 m.
+
+Read straight from the published CSV, no conversion. The source is the OGGM
+mirror because the official NSIDC distribution needs an Earthdata login and
+the older GLIMS path is gone.
+
+```bash
+npm run glaciers && npm run render configs/glaciers.json
+```
+
+**Every lake on Earth, by altitude** — 1,427,688 from HydroLAKES, each with an
+area and an elevation, none dropped.
+
+![Every lake on Earth, a wave climbing from the Dead Sea to the Tibetan plateau](docs/readme-lakes.gif)
+
+North America holds 995,769 of them — more than the rest of the world put
+together. That is not a survey artefact: HydroLAKES uses a uniform ten hectare
+threshold everywhere. It is glaciation, and the bright zone stops in a hard
+line across the northern United States which is the Last Glacial Maximum ice
+margin, drawn by nothing but lake positions.
+
+```bash
+npm run lakes && npm run render configs/lakes.json
+```
+
 ### Making the ground less bare
 
 Outlines alone leave the continents as empty as the sea. Two optional layers

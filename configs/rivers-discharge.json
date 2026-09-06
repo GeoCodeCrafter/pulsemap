@@ -13,10 +13,10 @@
   "size": {
     "field": "d",
     "scale": "log",
-    "base": 0.5,
+    "base": 0.42,
     "exponent": 1.15,
-    "min": 0.3,
-    "bloom": 0.8
+    "min": 0.28,
+    "bloom": 0.7
   },
   "colour": {
     "field": "d",
@@ -84,14 +84,14 @@
   "pulse": {
     "field": "k",
     "mode": "cycle",
-    "spacing": 1200,
-    "width": 0.11,
-    "tail": 3,
+    "spacing": 1400,
+    "width": 0.1,
+    "tail": 3.5,
     "direction": "down"
   },
   "alpha": {
-    "base": 0.17,
-    "pulse": 0.46
+    "base": 0.5,
+    "pulse": 0.34
   },
   "watermark": "github.com/GeoCodeCrafter/pulsemap"
 }
